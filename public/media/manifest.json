@@ -1,0 +1,87 @@
+{
+  "project": "Hollowick",
+  "purpose": "Licensed stock imagery for a website prototype; these assets are not presented as outputs of the listed AI models.",
+  "retrievedAt": "2026-09-20",
+  "assets": [
+    {
+      "file": "dunes.jpg",
+      "title": "Golden sand dunes under a pale sky",
+      "description": "Soft golden desert dunes in Al Qudra, Dubai, with a pale distant horizon.",
+      "creator": "Mansi Telharkar",
+      "provider": "Unsplash",
+      "sourceUrl": "https://unsplash.com/photos/golden-sand-dunes-under-a-pale-sky-1PirNIB6RlQ",
+      "downloadUrl": "https://images.unsplash.com/photo-1767169071106-b269d959a8d6?auto=format&fit=crop&fm=jpg&q=85&w=1600",
+      "license": "Unsplash License",
+      "licenseUrl": "https://unsplash.com/license",
+      "width": 1600,
+      "height": 1067,
+      "fileSizeBytes": 205040
+    },
+    {
+      "file": "ocean.jpg",
+      "title": "Blue and white ocean wave",
+      "description": "Sculptural turquoise ocean water and white surf seen from above in Hawaii.",
+      "creator": "Michael Olsen",
+      "provider": "Unsplash",
+      "sourceUrl": "https://unsplash.com/photos/blue-and-white-ocean-wave-mSTK6URRWU8",
+      "downloadUrl": "https://images.unsplash.com/photo-1507963901243-ebfaecd5f2f4?auto=format&fit=crop&fm=jpg&q=85&w=1200",
+      "license": "Unsplash License",
+      "licenseUrl": "https://unsplash.com/license",
+      "width": 1200,
+      "height": 770,
+      "fileSizeBytes": 153290
+    },
+    {
+      "file": "portrait.jpg",
+      "title": "Looking At The Sunset",
+      "description": "Woman in a black top facing the sunset with warm light and subtle lens flare.",
+      "creator": "Josh Blanton",
+      "provider": "Unsplash",
+      "sourceUrl": "https://unsplash.com/photos/woman-in-black-top-looking-toward-sun-during-daytime-YnLX6VbEHEI",
+      "downloadUrl": "https://images.unsplash.com/photo-1484618273142-b6e2536a307d?auto=format&fit=crop&fm=jpg&q=85&w=1200",
+      "license": "Unsplash License",
+      "licenseUrl": "https://unsplash.com/license",
+      "width": 1200,
+      "height": 800,
+      "fileSizeBytes": 95412
+    },
+    {
+      "file": "architecture.jpg",
+      "title": "Modern concrete architecture with a dramatic skylight",
+      "description": "A minimal sculptural concrete interior with dramatic natural light.",
+      "creator": "rawkkim",
+      "provider": "Unsplash",
+      "sourceUrl": "https://unsplash.com/photos/modern-concrete-architecture-with-a-dramatic-skylight-5gK9XkkspPM",
+      "downloadUrl": "https://images.unsplash.com/photo-1772708526829-f76d06679c6c?auto=format&fit=crop&fm=jpg&q=85&w=1200",
+      "license": "Unsplash License",
+      "licenseUrl": "https://unsplash.com/license",
+      "width": 1200,
+      "height": 1800,
+      "fileSizeBytes": 580146
+    },
+    {
+      "file": "hero.mp4",
+      "title": "Dunes in the Sahara desert",
+      "description": "A quiet timelapse of afternoon shadows moving across warm Sahara sand dunes.",
+      "creator": "dubassy",
+      "provider": "Mixkit",
+      "sourceUrl": "https://mixkit.co/free-stock-video/dunes-in-the-sahara-desert-4149/",
+      "downloadUrl": "https://assets.mixkit.co/videos/4149/4149-720.mp4",
+      "license": "Mixkit Stock Video Free License",
+      "licenseUrl": "https://mixkit.co/license/#videoFree",
+      "durationSeconds": 11
+    },
+    {
+      "file": "hero-poster.jpg",
+      "title": "Dunes in the Sahara desert — video poster",
+      "description": "Opening frame of the Sahara dunes timelapse.",
+      "creator": "dubassy",
+      "provider": "Mixkit",
+      "sourceUrl": "https://mixkit.co/free-stock-video/dunes-in-the-sahara-desert-4149/",
+      "downloadUrl": "https://assets.mixkit.co/videos/4149/4149-thumb-720-0.jpg",
+      "license": "Mixkit Stock Video Free License",
+      "licenseUrl": "https://mixkit.co/license/#videoFree"
+    }
+  ],
+  "videoGalleryCredits": "/media/video-credits.json"
+}

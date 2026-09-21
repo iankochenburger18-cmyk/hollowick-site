@@ -1,0 +1,15 @@
+{
+  "name": "hollowick",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "description": "A cinematic, interactive AI video studio website.",
+  "scripts": {
+    "dev": "node server.mjs",
+    "start": "node server.mjs",
+    "build": "node build.mjs",
+    "preview": "node server.mjs --dist",
+    "check": "node --check src/main.js && node --check src/studio.js && node --check server.mjs"
+  },
+  "engines": { "node": ">=20" }
+}

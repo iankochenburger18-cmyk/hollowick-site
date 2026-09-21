@@ -1,0 +1,96 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="theme-color" content="#171815" />
+  <meta name="description" content="Hollowick brings AI video models into one beautifully simple creative studio. Explore the possibilities. Make your next big idea move." />
+  <title>Hollowick — A little spark. An infinite world.</title>
+  <link rel="icon" type="image/png" href="/brand/favicon.png" />
+  <link rel="preload" href="/fonts/manrope-400.ttf" as="font" type="font/ttf" crossorigin />
+  <link rel="preload" href="/fonts/instrument-serif-italic.ttf" as="font" type="font/ttf" crossorigin />
+  <link rel="preload" href="/media/hero-poster.jpg" as="image" />
+  <link rel="stylesheet" href="/src/styles.css" />
+  <link rel="stylesheet" href="/src/studio.css" />
+  <link rel="stylesheet" href="/src/gallery.css" />
+  <link rel="stylesheet" href="/src/refinements.css" />
+  <link rel="stylesheet" href="/src/footer.css" />
+</head>
+<body>
+  <a class="skip-link" href="#main">Skip to content</a>
+  <svg class="svg-defs" xmlns="http://www.w3.org/2000/svg" aria-hidden="true"><defs>
+    <symbol id="arrow" viewBox="0 0 24 24"><path d="M5 12h14m-6-6 6 6-6 6" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></symbol>
+    <symbol id="arrow-up" viewBox="0 0 24 24"><path d="M6 18 18 6M6 6h12v12" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></symbol>
+    <symbol id="play" viewBox="0 0 24 24"><path d="m9 5 11 7-11 7Z" fill="currentColor"/></symbol>
+    <symbol id="plus" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14" fill="none" stroke="currentColor" stroke-width="1.5"/></symbol>
+    <symbol id="close" viewBox="0 0 24 24"><path d="m6 6 12 12M6 18 18 6" fill="none" stroke="currentColor" stroke-width="1.5"/></symbol>
+  </defs></svg>
+
+  <header class="site-header" id="site-header">
+    <a class="wordmark" href="#" aria-label="Hollowick home"><img class="brand-mark" src="/brand/hollowick-mark-chartreuse.png" alt="" width="32" height="35"/>hollowick<span class="brand-period">™</span></a>
+    <nav class="desktop-nav" aria-label="Main navigation"><a href="#models">The models</a><a href="#possibilities">Possibilities</a><a href="#how-it-works">The experience</a></nav>
+    <div class="nav-actions"><button class="nav-studio" data-open-studio>Enter the studio <svg><use href="#arrow-up"/></svg></button><button class="menu-toggle" aria-label="Open menu" aria-expanded="false" aria-controls="mobile-menu"><span></span><span></span></button></div>
+  </header>
+  <nav id="mobile-menu" class="mobile-menu" aria-label="Mobile navigation" hidden><a href="#models">The models <span>01</span></a><a href="#possibilities">Possibilities <span>02</span></a><a href="#how-it-works">The experience <span>03</span></a><button data-open-studio>Enter the studio <svg><use href="#arrow-up"/></svg></button></nav>
+
+  <main id="main">
+    <section class="hero" aria-labelledby="hero-title">
+      <div class="hero-media"><video id="hero-video" autoplay muted loop playsinline preload="metadata" poster="/media/hero-poster.jpg" aria-hidden="true"><source src="/media/hero.mp4" type="video/mp4" /></video><div class="hero-shade"></div><div class="film-grain"></div></div>
+      <div class="hero-content">
+        
+        <h1 id="hero-title"><span class="hero-line">A little spark.</span><span class="hero-line">An <em>infinite</em> world.</span></h1>
+        <div class="hero-bottom">
+          <div class="hero-description"><p>Every great film begins with a what if.<br>Meet the AI video studio for yours.</p><div class="hero-cta-row"><button class="button button-lime" data-open-studio>Start creating <svg><use href="#arrow-up"/></svg></button></div></div>
+          <form id="hero-prompt-form" class="hero-prompt"><label for="hero-prompt"><span class="prompt-spark">✳</span> WHAT DO YOU HAVE IN MIND?</label><div class="prompt-input-row"><input name="prompt" id="hero-prompt" placeholder="An endless desert. A world waking up…" maxlength="1200" autocomplete="off"/><button type="submit" aria-label="Explore this idea"><svg><use href="#arrow-up"/></svg></button></div></form>
+        </div>
+      </div>
+    </section>
+
+    <section class="model-strip" aria-label="Models in the studio"><p>MANY MINDS. ONE CREATIVE SPACE.</p><div class="provider-logos"><span class="provider"><span class="google-mark">G</span> Google <strong>Veo</strong></span><span class="provider runway-logo"><span>▰</span> runway</span><span class="provider kling-logo"><span>◈</span> KLING AI</span><span class="provider luma-logo"><span class="luma-symbol">◒</span> LUMA</span></div></section>
+
+    <section class="models-section section-light" id="models" aria-labelledby="models-title">
+      <div class="section-kicker reveal"><span><span class="index-dot"></span> 01 / THE MODELS</span><span>DIFFERENT MINDS. SHARED POSSIBILITIES.</span></div>
+      <div class="section-heading reveal"><h2 id="models-title">Your vision.<br>Your <em>choice.</em></h2><p>One idea can go a thousand different ways.<br>Find the model that sees it like you do.<br>All in one creative space.</p></div>
+      <div class="model-explorer reveal">
+        <div class="model-tabs" role="tablist" aria-label="Explore video models" aria-orientation="vertical">
+          <button class="model-tab active" id="model-veo" role="tab" aria-selected="true" aria-controls="model-preview" data-model-tab="veo"><span class="model-tab-index">01</span><span class="model-tab-main"><span class="model-tab-name">Veo 3.1 <span class="model-tag">GOOGLE</span></span><span class="model-tab-desc">Give your imagination a sense of reality.</span></span><svg><use href="#arrow-up"/></svg></button>
+          <button class="model-tab" id="model-runway" role="tab" aria-selected="false" aria-controls="model-preview" tabindex="-1" data-model-tab="runway"><span class="model-tab-index">02</span><span class="model-tab-main"><span class="model-tab-name">Gen-4.5 <span class="model-tag">RUNWAY</span></span><span class="model-tab-desc">For the shots you can't stop thinking about.</span></span><svg><use href="#arrow-up"/></svg></button>
+          <button class="model-tab" id="model-kling" role="tab" aria-selected="false" aria-controls="model-preview" tabindex="-1" data-model-tab="kling"><span class="model-tab-index">03</span><span class="model-tab-main"><span class="model-tab-name">Kling 3.0 <span class="model-tag">KLING AI</span></span><span class="model-tab-desc">A new perspective on every movement.</span></span><svg><use href="#arrow-up"/></svg></button>
+          <button class="model-tab" id="model-luma" role="tab" aria-selected="false" aria-controls="model-preview" tabindex="-1" data-model-tab="luma"><span class="model-tab-index">04</span><span class="model-tab-main"><span class="model-tab-name">Ray3 <span class="model-tag">LUMA</span></span><span class="model-tab-desc">Take a familiar world somewhere unexpected.</span></span><svg><use href="#arrow-up"/></svg></button>
+          <div class="model-tabs-foot"><img class="brand-mark" src="/brand/hollowick-mark-dark.png" alt="" width="30" height="32"/><p>More ways to make.<br>Less getting in the way.</p></div>
+        </div>
+        <div class="model-preview" id="model-preview" role="tabpanel" aria-labelledby="model-veo" tabindex="0">
+          <img id="model-image" src="/media/dunes.jpg" alt="Sculptural desert dunes in warm sunlight" loading="lazy"/>
+          <div class="model-preview-shade"></div><div class="preview-top"><span class="glass-pill"><span class="tiny-dot"></span> VISUAL MOODBOARD</span><span class="frame-bracket">[ 16:9 ]</span></div>
+          <div class="preview-bottom"><div><span class="mono" id="preview-note">THE ART OF POSSIBILITY</span><h3 id="preview-title">Make the unreal<br>feel <em>real.</em></h3></div><button class="round-button" id="model-try" data-open-studio data-model="Veo 3.1" aria-label="Explore Veo 3.1 in the studio"><svg><use href="#arrow-up"/></svg></button></div>
+        </div>
+      </div>
+    </section>
+
+    <section class="manifesto" aria-label="Made for imagination"><div class="manifesto-orbit" aria-hidden="true"><img src="/brand/hollowick-mark-ivory.png" alt=""/></div><p class="manifesto-label mono reveal">FOR THE BEAUTIFULLY RESTLESS.</p><p class="manifesto-text">For the <span>“what if”</span> at 2 am.<br>The scene you <span>can't explain.</span><br>The idea that <em>won't leave you.</em></p><div class="manifesto-end reveal"><span class="small-line"></span><p>You bring the spark.<br>We'll make room for it.</p></div></section>
+
+    <section class="possibilities-section video-showcase" id="possibilities" aria-labelledby="possibilities-title">
+      <div class="showcase-heading">
+        <div class="section-kicker reveal"><span><span class="index-dot"></span> 02 / THE POSSIBILITIES</span></div>
+        <div class="section-heading reveal"><h2 id="possibilities-title">A window into<br><em>what if.</em></h2><div class="gallery-intro"><p>Big feelings. Bold perspectives. Beautifully strange ideas.<br>Find a scene that starts something.</p><div class="video-filters" aria-label="Filter example videos"><button class="active" data-video-filter="all" aria-pressed="true">All films</button><button data-video-filter="people" aria-pressed="false">People</button><button data-video-filter="nature" aria-pressed="false">Nature</button><button data-video-filter="worlds" aria-pressed="false">Worlds</button><button data-video-filter="abstract" aria-pressed="false">Abstract</button></div></div></div>
+      </div>
+      <div class="video-wall" id="video-wall" aria-label="Example film gallery"></div>
+      <p class="video-library-note">A collection of visual references. Pick a starting point and make it your own.</p>
+    </section>
+
+    <section class="workflow-section section-light" id="how-it-works" aria-labelledby="workflow-title">
+      <div class="workflow-copy"><div class="section-kicker"><span><span class="index-dot"></span> 03 / THE EXPERIENCE</span></div><h2 id="workflow-title">Less friction.<br>More <em>flow.</em></h2><p>Stay in the moment, from your first thought<br>to your next great scene.</p><button class="button button-dark" data-open-studio>Find your flow <svg><use href="#arrow-up"/></svg></button><div class="workflow-counter mono"><span id="workflow-current">01</span><span class="counter-line"></span>03</div></div>
+      <div class="workflow-steps">
+        <article class="workflow-step" data-step="01"><div class="step-visual prompt-visual"><span class="mini-label mono"><span class="tiny-dot"></span> IT STARTS WITH A THOUGHT</span><div class="sample-prompt">An ocean that moves<br>like <em>liquid silver.</em><span class="typing-caret"></span></div><div class="prompt-tags"><span>Soft light</span><span>Slow motion</span><span>Limitless</span></div><img class="step-brand-mark" src="/brand/hollowick-mark-dark.png" alt=""/></div><div class="step-caption"><span class="mono">01</span><div><h3>Put the impossible into words.</h3><p>A sentence. A reference. That half-formed idea.<br>Start wherever inspiration finds you.</p></div></div></article>
+        <article class="workflow-step" data-step="02"><div class="step-visual choice-visual"><span class="mini-label mono">A DIFFERENT LENS ON YOUR IDEA</span><div class="floating-model floating-one">Veo 3.1<span>G</span></div><div class="floating-model floating-two">Gen-4.5<span>▰</span></div><div class="floating-model floating-three">Kling 3.0<span>◈</span></div><span class="choice-crosshair" aria-hidden="true">+</span></div><div class="step-caption"><span class="mono">02</span><div><h3>Find your creative counterpart.</h3><p>Explore different models in the same workspace.<br>Follow the one that fits your vision.</p></div></div></article>
+        <article class="workflow-step" data-step="03"><div class="step-visual film-visual"><img src="/media/ocean.jpg" alt="A dramatic ocean scene as a creative reference" loading="lazy"/><div class="mini-film-header mono">YOUR NEXT CHAPTER <span>● REC</span></div><div class="mini-film-title">And then,<br><em>it moves.</em></div><div class="mini-timeline"><span></span><span></span><span></span><span></span><span></span><i></i></div></div><div class="step-caption"><span class="mono">03</span><div><h3>Keep the good ideas moving.</h3><p>Shape your concept. Save your direction.<br>Make something only you could imagine.</p></div></div></article>
+      </div>
+    </section>
+
+    <section class="final-cta" aria-labelledby="cta-title"><div class="cta-top mono reveal"><span class="status-dot"></span> YOUR NEXT CHAPTER IS UNWRITTEN.</div><h2 id="cta-title" class="reveal">What if<br>you <em>made it?</em></h2><button class="button button-lime reveal" data-open-studio>Let's find out <svg><use href="#arrow-up"/></svg></button><div class="cta-orbit" aria-hidden="true"><img src="/brand/hollowick-mark-chartreuse.png" alt=""/></div><span class="cta-small mono">A LITTLE SPARK IS ALL IT TAKES.</span></section>
+  </main>
+  <footer id="site-footer"></footer>
+  <dialog id="about-dialog" class="about-dialog" aria-labelledby="about-title"><button class="dialog-close" aria-label="Close information"><svg><use href="#close"/></svg></button><span class="eyebrow">A LITTLE CONTEXT</span><h2 id="about-title">Built to <em>imagine.</em></h2><p>This is an interactive Hollowick website and studio preview. You can explore models, write prompts, upload a local reference, and save or export creative briefs.</p><p>Live AI generation, accounts, and payments are not connected. The photographs and film are curated visual references, not outputs from the models shown. Model names belong to their respective owners.</p><a href="/media/manifest.json" target="_blank" rel="noopener">View visual credits <svg><use href="#arrow-up"/></svg></a></dialog>
+  <script type="module" src="/src/main.js"></script>
+</body>
+</html>
