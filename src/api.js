@@ -40,9 +40,15 @@ export async function signIn(email, password) {
     method: 'POST',
     headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
     body: new URLSearchParams({ email, password, csrfToken }).toString(),
+    // Auth.js answers this with a redirect (even with ?json=true). We must not
+    // let the browser follow it: the redirect target isn't covered by the
+    // backend's /api/* CORS headers, so a followed redirect gets blocked as a
+    // cross-origin read and throws "NetworkError when attempting to fetch
+    // resource" even though sign-in itself succeeded. 'manual' stops the
+    // browser at the (unreadable, and here unneeded) redirect response.
+    redirect: 'manual',
   });
-  // Auth.js answers the credentials callback with a redirect either way;
-  // the only reliable signal is whether a session now exists.
+  // The only reliable success signal is whether a session now exists.
   const session = await getSession();
   if (!session?.user) throw new Error('Incorrect email or password.');
   return session;
@@ -55,6 +61,7 @@ export async function signOut() {
       method: 'POST',
       headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
       body: new URLSearchParams({ csrfToken }).toString(),
+      redirect: 'manual', // same redirect-follow issue as signIn() above
     });
   } catch {
     // Treat the session as ended locally even if the request itself failed.
