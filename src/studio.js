@@ -1,3 +1,5 @@
+import { registerAccount, signIn as apiSignIn, signOut as apiSignOut, getSession, requestGeneration, listGenerations, getGeneration } from './api.js';
+
 const STORAGE_KEY = 'hollowick-studio-draft-v1';
 const CONCEPTS_KEY = 'hollowick-studio-concepts-v1';
 const MODELS = ['Veo 3.1', 'Gen-4.5', 'Kling 3.0', 'Ray3'];
@@ -90,6 +92,9 @@ export function initStudio() {
   let pendingUpload = null;
   let opener = null;
   let previousOverflow = '';
+  let session = null;
+  let pollTimer = null;
+  let pollAttempts = 0;
 
   const dialog = document.createElement('dialog');
   dialog.id = 'hollowick-studio';
@@ -102,6 +107,22 @@ export function initStudio() {
         <div class="hw-studio-brand"><img class="hw-studio-brand-logo" src="/brand/hollowick-mark-chartreuse.png" width="25" height="27" alt=""/><span id="hw-studio-title">hollowick <span class="hw-studio-brand-divider">/</span> studio</span><span class="hw-studio-preview-badge">PREVIEW</span></div>
         <button class="hw-studio-icon-btn" data-hw-close type="button" aria-label="Close studio">${icon.close}</button>
       </header>
+      <div class="hw-studio-account" data-hw-account>
+        <div class="hw-studio-account-guest" data-hw-account-guest>
+          <span class="hw-studio-account-label">Sign in for real AI video generation</span>
+          <form class="hw-studio-account-form" data-hw-auth-form>
+            <input class="hw-studio-account-input" type="email" name="email" placeholder="Email" autocomplete="email" required>
+            <input class="hw-studio-account-input" type="password" name="password" placeholder="Password" autocomplete="current-password" minlength="8" required>
+            <button type="submit" class="hw-studio-account-btn" data-hw-auth-action="signin">Sign in</button>
+            <button type="button" class="hw-studio-account-btn hw-studio-account-btn--ghost" data-hw-auth-action="signup">Create account</button>
+          </form>
+        </div>
+        <div class="hw-studio-account-user" data-hw-account-user hidden>
+          <span class="hw-studio-account-label">Signed in as <strong data-hw-account-email></strong></span>
+          <button type="button" class="hw-studio-account-btn hw-studio-account-btn--ghost" data-hw-signout>Sign out</button>
+        </div>
+        <p class="hw-studio-account-status" data-hw-account-status role="status" aria-live="polite"></p>
+      </div>
       <div class="hw-studio-layout">
         <section class="hw-studio-canvas" aria-label="Concept reference and creative brief">
           <div class="hw-studio-canvas-top"><span class="hw-studio-eyebrow">YOUR NEXT GREAT IDEA</span><span class="hw-studio-frame-number">FRAME 001</span></div>
@@ -119,6 +140,12 @@ export function initStudio() {
             <p class="hw-studio-eyebrow">A LITTLE DIRECTION. ENDLESS POSSIBILITY.</p>
             <h2>Make room for <em>the idea.</em></h2>
             <p>Shape a scene, find your model, and bring your direction into focus.</p>
+          </div>
+          <div class="hw-studio-generate" data-hw-generate>
+            <div class="hw-studio-generate-head"><span class="hw-studio-eyebrow">LIVE GENERATION <span class="hw-studio-generate-tag">RAY3 · LUMA</span></span><select class="hw-studio-generate-select" data-hw-generations aria-label="Your recent generations"><option value="">Recent generations</option></select></div>
+            <div class="hw-studio-generate-video-wrap" data-hw-generate-stage hidden><video class="hw-studio-generate-video" data-hw-generate-video controls playsinline></video></div>
+            <p class="hw-studio-generate-status" data-hw-generate-status role="status" aria-live="polite"></p>
+            <button type="button" class="hw-studio-generate-btn" data-hw-generate-btn disabled>Generate real video</button>
           </div>
           <div class="hw-studio-saved" data-hw-saved-wrap hidden><label for="hw-studio-saved">SAVED CONCEPTS</label><select id="hw-studio-saved" aria-label="Load a saved concept"><option value="">Choose a concept</option></select></div>
           <p class="hw-studio-honesty" id="hw-studio-disclosure">This is a studio preview. Build and save a creative brief here; live AI video generation isn’t connected. Reference images are inspiration, not generated output.</p>
@@ -153,10 +180,95 @@ export function initStudio() {
   const savedSelect = $('#hw-studio-saved');
   const status = $('[data-hw-status]');
   const imageElement = $('[data-hw-image]');
+  const accountGuest = $('[data-hw-account-guest]');
+  const accountUser = $('[data-hw-account-user]');
+  const accountEmail = $('[data-hw-account-email]');
+  const accountStatus = $('[data-hw-account-status]');
+  const authForm = $('[data-hw-auth-form]');
+  const generationsSelect = $('[data-hw-generations]');
+  const generateBtn = $('[data-hw-generate-btn]');
+  const generateStatus = $('[data-hw-generate-status]');
+  const generateStage = $('[data-hw-generate-stage]');
+  const generateVideo = $('[data-hw-generate-video]');
 
   function setStatus(message, error = false) {
     status.textContent = message;
     status.classList.toggle('hw-studio-status--error', error);
+  }
+
+  function setAccountStatus(message, error = false) {
+    accountStatus.textContent = message || '';
+    accountStatus.classList.toggle('hw-studio-account-status--error', error);
+  }
+
+  function setGenerateStatus(message, error = false) {
+    generateStatus.textContent = message || '';
+    generateStatus.classList.toggle('hw-studio-generate-status--error', error);
+  }
+
+  function renderAccount() {
+    const signedIn = !!session?.user;
+    accountGuest.hidden = signedIn;
+    accountUser.hidden = !signedIn;
+    if (signedIn) accountEmail.textContent = session.user.email || 'your account';
+    generateBtn.disabled = !signedIn;
+    if (!signedIn) setGenerateStatus('Sign in above to generate a real video.');
+    else if (!generateStatus.textContent) setGenerateStatus('Ready when you are.');
+  }
+
+  async function refreshSession() {
+    try { session = await getSession(); }
+    catch { session = null; }
+    renderAccount();
+    if (session?.user) refreshGenerationsList();
+  }
+
+  async function refreshGenerationsList() {
+    try {
+      const jobs = await listGenerations();
+      generationsSelect.replaceChildren(new Option('Recent generations', ''));
+      for (const job of jobs.slice(0, 12)) {
+        const label = job.prompt.length > 32 ? `${job.prompt.slice(0, 32)}…` : job.prompt;
+        generationsSelect.append(new Option(`${job.status} · ${label}`, job.id));
+      }
+    } catch { /* leave the list as-is if it fails to load */ }
+  }
+
+  function stopPolling() {
+    if (pollTimer) clearTimeout(pollTimer);
+    pollTimer = null;
+    pollAttempts = 0;
+  }
+
+  function showGenerationResult(job) {
+    if (job.status === 'COMPLETED' && job.resultUrl) {
+      generateVideo.src = job.resultUrl;
+      generateStage.hidden = false;
+      setGenerateStatus('Your video is ready.');
+    } else if (job.status === 'FAILED') {
+      generateStage.hidden = true;
+      setGenerateStatus(job.error || 'That generation failed. Try again.', true);
+    } else {
+      generateStage.hidden = true;
+      setGenerateStatus(job.status === 'RUNNING' ? 'Generating your video… this can take a minute or two.' : 'Queued…');
+    }
+  }
+
+  function pollGeneration(id) {
+    stopPolling();
+    const tick = async () => {
+      pollAttempts += 1;
+      try {
+        const job = await getGeneration(id);
+        showGenerationResult(job);
+        if (job.status === 'COMPLETED' || job.status === 'FAILED') { refreshGenerationsList(); return; }
+        if (pollAttempts >= 100) { setGenerateStatus('Still working on it — check back in a bit.'); return; }
+        pollTimer = setTimeout(tick, 4000);
+      } catch (error) {
+        setGenerateStatus(error.message || 'Lost track of that generation.', true);
+      }
+    };
+    tick();
   }
 
   function persistDraft() {
@@ -291,6 +403,7 @@ export function initStudio() {
     applyDraft();
     updateSavedConcepts();
     persistDraft();
+    refreshSession();
     previousOverflow = document.body.style.overflow;
     document.body.style.overflow = 'hidden';
     dialog.showModal();
@@ -311,6 +424,7 @@ export function initStudio() {
     cancelPendingUpload();
     releaseUpload();
     showReference();
+    generateVideo.pause();
     if (!document.querySelector('dialog[open]')) {
       const isVisible = element => element instanceof HTMLElement && element !== document.body && element.isConnected && !element.closest('[hidden], [inert], dialog:not([open])') && element.getClientRects().length > 0 && getComputedStyle(element).visibility !== 'hidden';
       const returnTarget = isVisible(opener) ? opener : [...document.querySelectorAll('[data-open-studio], .menu-toggle')].find(isVisible);
@@ -461,6 +575,83 @@ export function initStudio() {
     setStatus('Your creative brief is ready to keep.');
   });
 
+  authForm.addEventListener('submit', async event => {
+    event.preventDefault();
+    const data = new FormData(authForm);
+    const email = String(data.get('email') || '').trim();
+    const password = String(data.get('password') || '');
+    if (!email || password.length < 8) { setAccountStatus('Enter an email and a password of at least 8 characters.', true); return; }
+    const submitButton = authForm.querySelector('[data-hw-auth-action="signin"]');
+    submitButton.disabled = true;
+    setAccountStatus('Signing in…');
+    try {
+      session = await apiSignIn(email, password);
+      renderAccount();
+      setAccountStatus('Signed in.');
+      authForm.reset();
+    } catch (error) {
+      setAccountStatus(error.message || 'Could not sign in.', true);
+    } finally {
+      submitButton.disabled = false;
+    }
+  });
+
+  authForm.querySelector('[data-hw-auth-action="signup"]').addEventListener('click', async () => {
+    const data = new FormData(authForm);
+    const email = String(data.get('email') || '').trim();
+    const password = String(data.get('password') || '');
+    if (!email || password.length < 8) { setAccountStatus('Enter an email and a password of at least 8 characters.', true); return; }
+    const signupButton = authForm.querySelector('[data-hw-auth-action="signup"]');
+    signupButton.disabled = true;
+    setAccountStatus('Creating your account…');
+    try {
+      await registerAccount(email, password);
+      session = await apiSignIn(email, password);
+      renderAccount();
+      setAccountStatus('Account created and signed in.');
+      authForm.reset();
+    } catch (error) {
+      setAccountStatus(error.message || 'Could not create your account.', true);
+    } finally {
+      signupButton.disabled = false;
+    }
+  });
+
+  $('[data-hw-signout]').addEventListener('click', async () => {
+    await apiSignOut();
+    session = null;
+    renderAccount();
+    setAccountStatus('Signed out.');
+    stopPolling();
+    generateStage.hidden = true;
+  });
+
+  generateBtn.addEventListener('click', async () => {
+    syncDraftFromForm();
+    if (!session?.user) { setGenerateStatus('Sign in above to generate a real video.', true); return; }
+    if (!draft.prompt.trim()) { setGenerateStatus('Add a prompt first.', true); prompt.focus(); return; }
+    if (draft.model !== 'Ray3') { setGenerateStatus('Real generation currently runs on Ray3 (Luma) — switch your model to Ray3 to generate.', true); return; }
+    generateBtn.disabled = true;
+    generateStage.hidden = true;
+    setGenerateStatus('Starting your generation…');
+    try {
+      const job = await requestGeneration({ prompt: draft.prompt.trim(), duration: Number(draft.duration), aspectRatio: draft.ratio });
+      setGenerateStatus('Queued…');
+      pollGeneration(job.id);
+    } catch (error) {
+      setGenerateStatus(error.message || 'Could not start your video generation.', true);
+    } finally {
+      generateBtn.disabled = !session?.user;
+    }
+  });
+
+  generationsSelect.addEventListener('change', () => {
+    const id = generationsSelect.value;
+    if (!id) return;
+    generateStage.hidden = true;
+    pollGeneration(id);
+  });
+
   $('#hw-studio-upload').addEventListener('change', event => {
     const file = event.target.files?.[0];
     if (!file) return;
@@ -518,6 +709,8 @@ export function initStudio() {
 
   applyDraft();
   updateSavedConcepts();
+  renderAccount();
+  refreshSession();
   return { open, close };
 }
 

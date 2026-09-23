@@ -40,6 +40,19 @@
 .hw-studio-preview-badge { margin-left: 2px; padding: 3px 7px; border: 1px solid #4c5141; border-radius: 4px; color: var(--hw-lime); font: 8px ui-monospace, SFMono-Regular, Consolas, monospace; letter-spacing: .07em; }
 .hw-studio-icon-btn { display: grid; place-items: center; height: 32px; width: 32px; border: 1px solid var(--hw-line); background: transparent; color: var(--hw-ivory); border-radius: 50%; transition: background .2s, transform .2s; }
 .hw-studio-icon-btn:hover { background: #ffffff10; transform: rotate(90deg); }
+.hw-studio-account { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 14px; padding: 12px 28px; border-bottom: 1px solid var(--hw-line); background: #14160f; }
+.hw-studio-account-label { color: #9ea394; font-size: 9px; white-space: nowrap; }
+.hw-studio-account-guest { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; flex: 1; min-width: 0; }
+.hw-studio-account-form { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; flex: 1; min-width: 0; }
+.hw-studio-account-input { min-width: 0; flex: 1 1 130px; border: 1px solid #373c2f; border-radius: 5px; background: #1d201a; color: var(--hw-ivory); padding: 7px 10px; font-size: 10px !important; }
+.hw-studio-account-input::placeholder { color: #7d8272; }
+.hw-studio-account-btn { flex: none; border: 1px solid #4e6031; background: transparent; color: var(--hw-lime); padding: 7px 12px; border-radius: 5px; font-size: 9px; white-space: nowrap; transition: background .2s; }
+.hw-studio-account-btn:hover { background: #ffffff08; }
+.hw-studio-account-btn--ghost { border-color: #373c2f; color: #c6ccba; }
+.hw-studio-account-btn:disabled { opacity: .5; }
+.hw-studio-account-user { display: flex; align-items: center; gap: 12px; }
+.hw-studio-account-status { flex-basis: 100%; margin: 0; color: #8e987e; font-size: 8px; }
+.hw-studio-account-status--error { color: #e4ab8e; }
 .hw-studio-layout { display: grid; grid-template-columns: 1.03fr 1fr; }
 .hw-studio-canvas { display: flex; flex-direction: column; padding: 28px; background: #11130f; min-width: 0; border-right: 1px solid var(--hw-line); }
 .hw-studio-canvas-top { display: flex; align-items: center; justify-content: space-between; margin-bottom: 24px; gap: 16px; }
@@ -77,6 +90,17 @@
 .hw-studio-concept-meta { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 14px; }
 .hw-studio-concept-meta span { border: 1px solid #3d4433; color: var(--hw-lime); padding: 4px 7px; font: 8px ui-monospace, SFMono-Regular, Consolas, monospace; border-radius: 3px; }
 .hw-studio-honesty { color: #858b7b; padding: 22px 0 0; margin: auto 0 0; font-size: 9px; line-height: 1.7; max-width: 420px; }
+.hw-studio-generate { margin-top: 22px; padding-top: 20px; border-top: 1px solid var(--hw-line); }
+.hw-studio-generate-head { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-bottom: 10px; }
+.hw-studio-generate-tag { margin-left: 6px; color: var(--hw-lime); }
+.hw-studio-generate-select { max-width: 160px; font-size: 8px !important; padding: 6px 26px 6px 8px !important; }
+.hw-studio-generate-video-wrap { border-radius: 6px; overflow: hidden; background: #000; margin-bottom: 10px; }
+.hw-studio-generate-video { width: 100%; display: block; max-height: 220px; }
+.hw-studio-generate-status { color: #8e987e; font-size: 9px; margin: 0 0 10px; min-height: 12px; }
+.hw-studio-generate-status--error { color: #e4ab8e; }
+.hw-studio-generate-btn { width: 100%; border: 1px solid #4e6031; background: transparent; color: var(--hw-lime); padding: 12px 14px; border-radius: 5px; font-size: 10px; font-weight: 600; transition: background .2s; }
+.hw-studio-generate-btn:hover:not(:disabled) { background: #ffffff08; }
+.hw-studio-generate-btn:disabled { opacity: .5; cursor: default; }
 .hw-studio-saved { margin-top: 22px; }
 .hw-studio-saved label { display: block; font: 7px ui-monospace, SFMono-Regular, Consolas, monospace; letter-spacing: .1em; margin-bottom: 8px; color: #adb29e; }
 .hw-studio-saved select { width: 100%; max-width: 100%; font-size: 10px !important; }
@@ -143,6 +167,8 @@
 @media (max-width: 680px) {
   .hw-studio { width: calc(100vw - 20px); max-height: calc(100dvh - 20px); border-radius: 12px; }
   .hw-studio-header { position: sticky; top: 0; z-index: 2; background: #171815f5; backdrop-filter: blur(12px); padding: 16px 20px; }
+  .hw-studio-account { padding: 12px 20px; }
+  .hw-studio-account-input { font-size: 16px !important; flex-basis: 100%; }
   .hw-studio-brand { font-size: 15px; gap: 9px; }
   .hw-studio-mark { width: 23px; height: 23px; font-size: 23px; }
   .hw-studio-layout { grid-template-columns: 1fr; }
