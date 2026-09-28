@@ -3,6 +3,10 @@ import { registerAccount, signIn as apiSignIn, signOut as apiSignOut, getSession
 const STORAGE_KEY = 'hollowick-studio-draft-v1';
 const CONCEPTS_KEY = 'hollowick-studio-concepts-v1';
 const MODELS = ['Veo 3.1', 'Gen-4.5', 'Kling 3.0', 'Ray3'];
+// Keep in sync with MODEL_TO_PROVIDER in the backend's
+// src/lib/video-providers/index.ts — a model only belongs here once its
+// provider adapter is registered there and its API key is set.
+const LIVE_MODELS = ['Veo 3.1', 'Gen-4.5', 'Kling 3.0', 'Ray3'];
 const PRESETS = {
   dunes: {
     label: 'Desert dream',
@@ -142,7 +146,7 @@ export function initStudio() {
             <p>Shape a scene, find your model, and bring your direction into focus.</p>
           </div>
           <div class="hw-studio-generate" data-hw-generate>
-            <div class="hw-studio-generate-head"><span class="hw-studio-eyebrow">LIVE GENERATION <span class="hw-studio-generate-tag">RAY3 · LUMA</span></span><select class="hw-studio-generate-select" data-hw-generations aria-label="Your recent generations"><option value="">Recent generations</option></select></div>
+            <div class="hw-studio-generate-head"><span class="hw-studio-eyebrow">LIVE GENERATION <span class="hw-studio-generate-tag" data-hw-generate-tag>RAY3 · LUMA</span></span><select class="hw-studio-generate-select" data-hw-generations aria-label="Your recent generations"><option value="">Recent generations</option></select></div>
             <div class="hw-studio-generate-video-wrap" data-hw-generate-stage hidden><video class="hw-studio-generate-video" data-hw-generate-video controls playsinline></video></div>
             <p class="hw-studio-generate-status" data-hw-generate-status role="status" aria-live="polite"></p>
             <button type="button" class="hw-studio-generate-btn" data-hw-generate-btn disabled>Generate real video</button>
@@ -295,6 +299,7 @@ export function initStudio() {
     $('[data-hw-count]').textContent = draft.prompt.length;
     $('[data-hw-image-ratio]').textContent = draft.ratio;
     $('[data-hw-frame]').dataset.ratio = draft.ratio;
+    $('[data-hw-generate-tag]').textContent = draft.model.toUpperCase();
   }
 
   function showReference() {
@@ -630,12 +635,12 @@ export function initStudio() {
     syncDraftFromForm();
     if (!session?.user) { setGenerateStatus('Sign in above to generate a real video.', true); return; }
     if (!draft.prompt.trim()) { setGenerateStatus('Add a prompt first.', true); prompt.focus(); return; }
-    if (draft.model !== 'Ray3') { setGenerateStatus('Real generation currently runs on Ray3 (Luma) — switch your model to Ray3 to generate.', true); return; }
+    if (!LIVE_MODELS.includes(draft.model)) { setGenerateStatus(`Real generation isn't wired up for ${draft.model} yet — try one of: ${LIVE_MODELS.join(', ')}.`, true); return; }
     generateBtn.disabled = true;
     generateStage.hidden = true;
     setGenerateStatus('Starting your generation…');
     try {
-      const job = await requestGeneration({ prompt: draft.prompt.trim(), duration: Number(draft.duration), aspectRatio: draft.ratio });
+      const job = await requestGeneration({ prompt: draft.prompt.trim(), duration: Number(draft.duration), aspectRatio: draft.ratio, model: draft.model });
       setGenerateStatus('Queued…');
       pollGeneration(job.id);
     } catch (error) {
