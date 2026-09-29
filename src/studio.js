@@ -2,11 +2,11 @@ import { registerAccount, signIn as apiSignIn, signOut as apiSignOut, getSession
 
 const STORAGE_KEY = 'hollowick-studio-draft-v1';
 const CONCEPTS_KEY = 'hollowick-studio-concepts-v1';
-const MODELS = ['Veo 3.1', 'Gen-4.5', 'Kling 3.0', 'Ray3'];
+const MODELS = ['Veo 3.1', 'Gen-4.5', 'Kling 3.0', 'Ray3', 'Seedance 2.5'];
 // Keep in sync with MODEL_TO_PROVIDER in the backend's
 // src/lib/video-providers/index.ts — a model only belongs here once its
 // provider adapter is registered there and its API key is set.
-const LIVE_MODELS = ['Veo 3.1', 'Gen-4.5', 'Kling 3.0', 'Ray3'];
+const LIVE_MODELS = ['Veo 3.1', 'Gen-4.5', 'Kling 3.0', 'Ray3', 'Seedance 2.5'];
 const PRESETS = {
   dunes: {
     label: 'Desert dream',
