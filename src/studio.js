@@ -2,11 +2,15 @@ import { registerAccount, signIn as apiSignIn, signOut as apiSignOut, getSession
 
 const STORAGE_KEY = 'hollowick-studio-draft-v1';
 const CONCEPTS_KEY = 'hollowick-studio-concepts-v1';
-const MODELS = ['Veo 3.1', 'Gen-4.5', 'Kling 3.0', 'Ray3', 'Seedance 2.5', 'PixVerse v6', 'MiniMax H3 Max Turbo', 'Wan 3.0 Prime'];
+const MODELS = ['Veo 3.1', 'Gen-4.5', 'Kling 3.0', 'Ray3', 'Seedance 2.5', 'PixVerse v6', 'MiniMax H3 Max Turbo', 'Wan 3.0 Prime', 'Genjutsu'];
 // Keep in sync with MODEL_TO_PROVIDER in the backend's
 // src/lib/video-providers/index.ts — a model only belongs here once its
 // provider adapter is registered there and its API key is set.
-const LIVE_MODELS = ['Veo 3.1', 'Gen-4.5', 'Kling 3.0', 'Ray3', 'Seedance 2.5', 'PixVerse v6', 'MiniMax H3 Max Turbo', 'Wan 3.0 Prime'];
+const LIVE_MODELS = ['Veo 3.1', 'Gen-4.5', 'Kling 3.0', 'Ray3', 'Seedance 2.5', 'PixVerse v6', 'MiniMax H3 Max Turbo', 'Wan 3.0 Prime', 'Genjutsu'];
+// Genjutsu is a motion-transfer model — it needs a reference video URL plus
+// one or more character/product image URLs, not just a text prompt. Keep in
+// sync with MODEL_TO_PROVIDER in the backend's src/lib/video-providers/index.ts.
+const REFERENCE_INPUT_MODELS = ['Genjutsu'];
 const PRESETS = {
   dunes: {
     label: 'Desert dream',
@@ -63,6 +67,11 @@ function validDraft(value = {}) {
     preset: typeof value.preset === 'string' && Object.hasOwn(PRESETS, value.preset) ? value.preset : 'dunes',
     referenceType,
     referenceName: referenceType === 'upload' ? (typeof value.referenceName === 'string' ? value.referenceName : legacyName).trim().slice(0, 255) || 'Your uploaded reference' : '',
+    // Only meaningful for REFERENCE_INPUT_MODELS (e.g. Genjutsu) — direct,
+    // publicly reachable URLs the backend forwards as-is. Unrelated to the
+    // "Add reference" mood-board upload above, which never leaves the browser.
+    refVideoUrl: typeof value.refVideoUrl === 'string' ? value.refVideoUrl.trim().slice(0, 2083) : '',
+    refImageUrls: typeof value.refImageUrls === 'string' ? value.refImageUrls.slice(0, 4000) : '',
   };
 }
 
@@ -165,6 +174,13 @@ export function initStudio() {
             <div><label class="hw-studio-label" for="hw-studio-model">Your model</label><div class="hw-studio-select-wrap"><select id="hw-studio-model" name="model">${MODELS.map(model => `<option value="${model}">${model}</option>`).join('')}</select></div></div>
             <div><label class="hw-studio-label" for="hw-studio-camera">Camera movement</label><select id="hw-studio-camera" name="camera"><option>Slow dolly in</option><option>Gentle orbit</option><option>Locked-off</option><option>Handheld follow</option></select></div>
           </div>
+          <div class="hw-studio-genjutsu-fields" data-hw-genjutsu-fields hidden>
+            <label class="hw-studio-label" for="hw-studio-ref-video">Reference video URL</label>
+            <input class="hw-studio-text-input" type="url" id="hw-studio-ref-video" name="refVideoUrl" placeholder="https://…/motion-reference.mp4" maxlength="2083">
+            <label class="hw-studio-label" for="hw-studio-ref-images">Character/product image URL(s)</label>
+            <input class="hw-studio-text-input" type="text" id="hw-studio-ref-images" name="refImageUrls" placeholder="https://…/one.jpg, https://…/two.jpg" maxlength="4000">
+            <p class="hw-studio-field-hint">Genjutsu transfers the motion from your reference video onto these images. Paste direct, publicly reachable URLs — uploads aren't hosted here yet.</p>
+          </div>
           <div class="hw-studio-settings-grid">
             <fieldset class="hw-studio-fieldset"><legend class="hw-studio-label">Aspect ratio</legend><div class="hw-studio-segmented">${['16:9','9:16','1:1'].map(ratio => `<label class="hw-studio-segment"><input type="radio" name="ratio" value="${ratio}"><span><i class="hw-studio-ratio-icon hw-studio-ratio-icon--${ratio.replace(':', '-')}" aria-hidden="true"></i>${ratio}</span></label>`).join('')}</div></fieldset>
             <fieldset class="hw-studio-fieldset"><legend class="hw-studio-label">Duration</legend><div class="hw-studio-segmented hw-studio-segmented--duration">${['5','10'].map(duration => `<label class="hw-studio-segment"><input type="radio" name="duration" value="${duration}"><span>${duration}s</span></label>`).join('')}</div></fieldset>
@@ -194,6 +210,9 @@ export function initStudio() {
   const generateStatus = $('[data-hw-generate-status]');
   const generateStage = $('[data-hw-generate-stage]');
   const generateVideo = $('[data-hw-generate-video]');
+  const genjutsuFields = $('[data-hw-genjutsu-fields]');
+  const refVideoInput = $('#hw-studio-ref-video');
+  const refImagesInput = $('#hw-studio-ref-images');
 
   function setStatus(message, error = false) {
     status.textContent = message;
@@ -282,7 +301,7 @@ export function initStudio() {
 
   function syncDraftFromForm() {
     const data = new FormData(form);
-    draft = validDraft({ ...draft, prompt: data.get('prompt'), model: data.get('model'), ratio: data.get('ratio'), duration: data.get('duration'), camera: data.get('camera') });
+    draft = validDraft({ ...draft, prompt: data.get('prompt'), model: data.get('model'), ratio: data.get('ratio'), duration: data.get('duration'), camera: data.get('camera'), refVideoUrl: data.get('refVideoUrl'), refImageUrls: data.get('refImageUrls') });
     updateVisualSettings();
     persistDraft();
     if (currentConcept && !conceptMatchesDraft()) {
@@ -300,6 +319,7 @@ export function initStudio() {
     $('[data-hw-image-ratio]').textContent = draft.ratio;
     $('[data-hw-frame]').dataset.ratio = draft.ratio;
     $('[data-hw-generate-tag]').textContent = draft.model.toUpperCase();
+    genjutsuFields.hidden = !REFERENCE_INPUT_MODELS.includes(draft.model);
   }
 
   function showReference() {
@@ -323,6 +343,8 @@ export function initStudio() {
     cameraSelect.value = draft.camera;
     form.querySelector(`input[name="ratio"][value="${draft.ratio}"]`).checked = true;
     form.querySelector(`input[name="duration"][value="${draft.duration}"]`).checked = true;
+    refVideoInput.value = draft.refVideoUrl;
+    refImagesInput.value = draft.refImageUrls;
     updateVisualSettings();
     showReference();
   }
@@ -636,11 +658,18 @@ export function initStudio() {
     if (!session?.user) { setGenerateStatus('Sign in above to generate a real video.', true); return; }
     if (!draft.prompt.trim()) { setGenerateStatus('Add a prompt first.', true); prompt.focus(); return; }
     if (!LIVE_MODELS.includes(draft.model)) { setGenerateStatus(`Real generation isn't wired up for ${draft.model} yet — try one of: ${LIVE_MODELS.join(', ')}.`, true); return; }
+    let refVideoUrl, refImageUrls;
+    if (REFERENCE_INPUT_MODELS.includes(draft.model)) {
+      refVideoUrl = draft.refVideoUrl.trim();
+      refImageUrls = draft.refImageUrls.split(/[,\n]/).map(url => url.trim()).filter(Boolean);
+      if (!refVideoUrl) { setGenerateStatus('Add a reference video URL first.', true); refVideoInput.focus(); return; }
+      if (refImageUrls.length === 0) { setGenerateStatus('Add at least one character/product image URL.', true); refImagesInput.focus(); return; }
+    }
     generateBtn.disabled = true;
     generateStage.hidden = true;
     setGenerateStatus('Starting your generation…');
     try {
-      const job = await requestGeneration({ prompt: draft.prompt.trim(), duration: Number(draft.duration), aspectRatio: draft.ratio, model: draft.model });
+      const job = await requestGeneration({ prompt: draft.prompt.trim(), duration: Number(draft.duration), aspectRatio: draft.ratio, model: draft.model, videoUrl: refVideoUrl, imageUrls: refImageUrls });
       setGenerateStatus('Queued…');
       pollGeneration(job.id);
     } catch (error) {

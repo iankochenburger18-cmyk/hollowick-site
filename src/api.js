@@ -74,11 +74,11 @@ export async function getSession() {
   return readJSON(response);
 }
 
-export async function requestGeneration({ prompt, duration, aspectRatio, model }) {
+export async function requestGeneration({ prompt, duration, aspectRatio, model, videoUrl, imageUrls }) {
   const response = await apiFetch('/api/generate', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ prompt, duration, aspectRatio, model }),
+    body: JSON.stringify({ prompt, duration, aspectRatio, model, videoUrl, imageUrls }),
   });
   const data = await readJSON(response);
   if (response.status === 401) throw new Error('Sign in to generate a real video.');
