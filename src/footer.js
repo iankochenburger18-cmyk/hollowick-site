@@ -101,9 +101,7 @@ export function initFooter() {
     });
     dialog.addEventListener('close', () => {
       const anotherOpen = document.querySelector('dialog[open]');
-      // The studio owns its inline overflow lock. Do not leave this class
-      // behind when a help dialog hands over to it.
-      document.body.classList.toggle('dialog-open', !!document.querySelector('dialog[open]:not(#hollowick-studio)'));
+      document.body.classList.toggle('dialog-open', !!anotherOpen);
       const opener = openers.get(dialog);
       if (!skipFocus.has(dialog) && !anotherOpen && opener instanceof HTMLElement) opener.focus({ preventScroll: true });
       skipFocus.delete(dialog);

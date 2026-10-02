@@ -1,0 +1,24 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="theme-color" content="#171815" />
+  <meta name="description" content="Your creative space. Shape a scene, explore video models, and bring your next idea into focus in Hollowick Studio." />
+  <title>Studio — Hollowick</title>
+  <link rel="icon" type="image/png" href="/brand/favicon.png" />
+  <link rel="preload" href="/fonts/manrope-400.ttf" as="font" type="font/ttf" crossorigin />
+  <link rel="preload" href="/fonts/instrument-serif-italic.ttf" as="font" type="font/ttf" crossorigin />
+  <link rel="stylesheet" href="/src/styles.css" />
+  <link rel="stylesheet" href="/src/studio.css" />
+</head>
+<body class="studio-page">
+  <a class="skip-link" href="#hw-studio-prompt">Skip to prompt</a>
+  <main id="hollowick-studio" class="hw-studio" aria-labelledby="hw-studio-title"></main>
+  <noscript><p>The studio needs JavaScript to save your direction and preview references. <a href="/">Return to Hollowick.</a></p></noscript>
+  <script type="module">
+    import { initStudio } from '/src/studio.js';
+    initStudio();
+  </script>
+</body>
+</html>

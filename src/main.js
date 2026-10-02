@@ -1,4 +1,4 @@
-import { initStudio } from './studio.js';
+import { initStudioNavigation } from './studio.js';
 import { initFooter } from './footer.js';
 import { initVideoGallery } from './gallery.js';
 
@@ -120,21 +120,20 @@ managedDialogs.forEach(dialog=>{
 });
 $('#about-preview').addEventListener('click',event=>openDialog($('#about-dialog'),event.currentTarget));
 
-// Close a gallery dialog before the delegated studio handler opens its modal.
+// Finish the current interaction before navigating to the studio page.
 document.addEventListener('click',event=>{
   if(event.target.closest('[data-open-studio]')){
-    $$('dialog[open]:not(#hollowick-studio)').forEach(dialog=>dialog.close());
+    $$('dialog[open]').forEach(dialog=>dialog.close());
     document.body.classList.remove('dialog-open');closeMenu();heroVideo.pause();
   }
 },true);
-initStudio();
+initStudioNavigation();
+window.addEventListener('pageshow', syncVideo);
 $$('svg').forEach(element=>element.setAttribute('aria-hidden','true'));
 const narrowLayout=window.matchMedia('(max-width: 800px)');
 function syncTabOrientation(){ $('.model-tabs').setAttribute('aria-orientation',narrowLayout.matches?'horizontal':'vertical'); }
 narrowLayout.addEventListener('change',syncTabOrientation);
 syncTabOrientation();
-const studioDialog=$('#hollowick-studio');
-studioDialog.addEventListener('close',syncVideo);
 const dialogObserver=new MutationObserver(syncVideo);
 $$('dialog').forEach(dialog=>dialogObserver.observe(dialog,{attributes:true,attributeFilter:['open']}));
 
