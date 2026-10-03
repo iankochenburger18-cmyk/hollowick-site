@@ -2,11 +2,11 @@ import { registerAccount, signIn as apiSignIn, signOut as apiSignOut, getSession
 
 const STORAGE_KEY = 'hollowick-studio-draft-v1';
 const CONCEPTS_KEY = 'hollowick-studio-concepts-v1';
-const MODELS = ['Veo 3.1', 'Gen-4.5', 'Kling 3.0', 'Ray3', 'Seedance 2.5', 'PixVerse v6', 'MiniMax H3 Max Turbo', 'Wan 3.0 Prime', 'Genjutsu'];
+const MODELS = ['Veo 3.1', 'Gen-4.5', 'Kling 3.0', 'Ray3', 'Seedance 2.5', 'PixVerse v6', 'MiniMax H3 Max Turbo', 'Wan 3.0 Prime', 'Genjutsu', 'Cinema Studio 4.0'];
 // Keep in sync with MODEL_TO_PROVIDER in the backend's
 // src/lib/video-providers/index.ts — a model only belongs here once its
 // provider adapter is registered there and its API key is set.
-const LIVE_MODELS = ['Veo 3.1', 'Gen-4.5', 'Kling 3.0', 'Ray3', 'Seedance 2.5', 'PixVerse v6', 'MiniMax H3 Max Turbo', 'Wan 3.0 Prime', 'Genjutsu'];
+const LIVE_MODELS = ['Veo 3.1', 'Gen-4.5', 'Kling 3.0', 'Ray3', 'Seedance 2.5', 'PixVerse v6', 'MiniMax H3 Max Turbo', 'Wan 3.0 Prime', 'Genjutsu', 'Cinema Studio 4.0'];
 // Genjutsu is a motion-transfer model — it needs a reference video URL plus
 // one or more character/product image URLs, not just a text prompt. Keep in
 // sync with MODEL_TO_PROVIDER in the backend's src/lib/video-providers/index.ts.
