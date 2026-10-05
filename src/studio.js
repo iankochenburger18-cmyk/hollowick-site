@@ -2,15 +2,19 @@ import { registerAccount, signIn as apiSignIn, signOut as apiSignOut, getSession
 
 const STORAGE_KEY = 'hollowick-studio-draft-v1';
 const CONCEPTS_KEY = 'hollowick-studio-concepts-v1';
-const MODELS = ['Veo 3.1', 'Gen-4.5', 'Kling 3.0', 'Kling 2.6', 'Ray3', 'Seedance 2.5', 'PixVerse v6', 'MiniMax H3 Max Turbo', 'Wan 3.0 Prime', 'Genjutsu', 'Cinema Studio 4.0'];
+const MODELS = ['Veo 3.1', 'Gen-4.5', 'Kling 3.0', 'Kling 2.6', 'Kling 2.5', 'Ray3', 'Seedance 2.5', 'Seedance 2.0', 'PixVerse v6', 'MiniMax H3 Max Turbo', 'MiniMax Hailuo', 'Wan 3.0 Prime', 'Wan 3.0', 'Wan 2.7', 'LTX 2.5 Fast', 'LTX 2.5 Pro', 'Happy Horse 1.1', 'Happy Horse 1.0', 'Genjutsu', 'Cinema Studio 4.0'];
 // Keep in sync with MODEL_TO_PROVIDER in the backend's
 // src/lib/video-providers/index.ts — a model only belongs here once its
 // provider adapter is registered there and its API key is set.
-const LIVE_MODELS = ['Veo 3.1', 'Gen-4.5', 'Kling 3.0', 'Kling 2.6', 'Ray3', 'Seedance 2.5', 'PixVerse v6', 'MiniMax H3 Max Turbo', 'Wan 3.0 Prime', 'Genjutsu', 'Cinema Studio 4.0'];
+const LIVE_MODELS = ['Veo 3.1', 'Gen-4.5', 'Kling 3.0', 'Kling 2.6', 'Kling 2.5', 'Ray3', 'Seedance 2.5', 'Seedance 2.0', 'PixVerse v6', 'MiniMax H3 Max Turbo', 'MiniMax Hailuo', 'Wan 3.0 Prime', 'Wan 3.0', 'Wan 2.7', 'LTX 2.5 Fast', 'LTX 2.5 Pro', 'Happy Horse 1.1', 'Happy Horse 1.0', 'Genjutsu', 'Cinema Studio 4.0'];
 // Genjutsu is a motion-transfer model — it needs a reference video URL plus
 // one or more character/product image URLs, not just a text prompt. Keep in
 // sync with MODEL_TO_PROVIDER in the backend's src/lib/video-providers/index.ts.
 const REFERENCE_INPUT_MODELS = ['Genjutsu'];
+// Kling 2.5 is image-to-video — it needs a single reference image URL
+// instead of a text-only prompt. Keep in sync with MODEL_TO_PROVIDER in the
+// backend's src/lib/video-providers/index.ts.
+const IMAGE_INPUT_MODELS = ['Kling 2.5'];
 const PRESETS = {
   dunes: {
     label: 'Desert dream',
@@ -82,6 +86,9 @@ function validDraft(value = {}) {
     // "Add reference" mood-board upload below, which never leaves the browser.
     refVideoUrl: typeof value.refVideoUrl === 'string' ? value.refVideoUrl.trim().slice(0, 2083) : '',
     refImageUrls: typeof value.refImageUrls === 'string' ? value.refImageUrls.slice(0, 4000) : '',
+    // Only meaningful for IMAGE_INPUT_MODELS (e.g. Kling 2.5) — a single
+    // direct, publicly reachable image URL the backend forwards as-is.
+    refImageUrl: typeof value.refImageUrl === 'string' ? value.refImageUrl.trim().slice(0, 2083) : '',
   };
 }
 
@@ -226,6 +233,11 @@ export function initStudio() {
             <input class="hw-studio-text-input" type="text" id="hw-studio-ref-images" name="refImageUrls" placeholder="https://…/one.jpg, https://…/two.jpg" maxlength="4000">
             <p class="hw-studio-field-hint">Genjutsu transfers the motion from your reference video onto these images. Paste direct, publicly reachable URLs — uploads aren't hosted here yet.</p>
           </div>
+          <div class="hw-studio-genjutsu-fields" data-hw-image-input-fields hidden>
+            <label class="hw-studio-label" for="hw-studio-ref-image">Reference image URL</label>
+            <input class="hw-studio-text-input" type="url" id="hw-studio-ref-image" name="refImageUrl" placeholder="https://…/starting-frame.jpg" maxlength="2083">
+            <p class="hw-studio-field-hint">Kling 2.5 animates this image. Paste a direct, publicly reachable URL — uploads aren't hosted here yet.</p>
+          </div>
           <section class="hw-studio-inspiration" aria-labelledby="hw-studio-presets-title"><h3 id="hw-studio-presets-title" class="hw-studio-label">Starting points</h3><div class="hw-studio-presets">${Object.entries(PRESETS).map(([key, preset]) => `<button type="button" class="hw-studio-preset" data-hw-preset="${key}" aria-pressed="false"><img src="${preset.image}" alt="" loading="lazy"><span>${preset.label}</span><i aria-hidden="true">${icon.check}</i></button>`).join('')}</div></section>
           <div class="hw-studio-saved" data-hw-generations-wrap hidden><label class="hw-studio-label" for="hw-studio-generations">Recent generations</label><select id="hw-studio-generations" data-hw-generations aria-label="Your recent generations"><option value="">Recent generations</option></select></div>
           <div class="hw-studio-saved" data-hw-saved-wrap hidden><label class="hw-studio-label" for="hw-studio-saved">Saved concepts</label><select id="hw-studio-saved" aria-label="Load a saved concept"><option value="">Choose a concept</option></select></div>
@@ -252,6 +264,8 @@ export function initStudio() {
   const genjutsuFields = $('[data-hw-genjutsu-fields]');
   const refVideoInput = $('#hw-studio-ref-video');
   const refImagesInput = $('#hw-studio-ref-images');
+  const imageInputFields = $('[data-hw-image-input-fields]');
+  const refImageInput = $('#hw-studio-ref-image');
   const accountGuest = $('[data-hw-account-guest]');
   const accountUser = $('[data-hw-account-user]');
   const accountEmail = $('[data-hw-account-email]');
@@ -309,7 +323,7 @@ export function initStudio() {
 
   function syncDraftFromForm() {
     const data = new FormData(form);
-    draft = validDraft({ ...draft, prompt: data.get('prompt'), model: data.get('model'), ratio: data.get('ratio'), duration: data.get('duration'), camera: data.get('camera'), refVideoUrl: data.get('refVideoUrl'), refImageUrls: data.get('refImageUrls') });
+    draft = validDraft({ ...draft, prompt: data.get('prompt'), model: data.get('model'), ratio: data.get('ratio'), duration: data.get('duration'), camera: data.get('camera'), refVideoUrl: data.get('refVideoUrl'), refImageUrls: data.get('refImageUrls'), refImageUrl: data.get('refImageUrl') });
     updateVisualSettings();
     persistDraft();
     if (currentConcept && !conceptMatchesDraft()) {
@@ -329,6 +343,7 @@ export function initStudio() {
     $('[data-hw-frame]').dataset.ratio = draft.ratio;
     studio.querySelectorAll('[data-hw-preset]').forEach(button => button.setAttribute('aria-pressed', String(draft.referenceType === 'preset' && button.dataset.hwPreset === draft.preset)));
     genjutsuFields.hidden = !REFERENCE_INPUT_MODELS.includes(draft.model);
+    imageInputFields.hidden = !IMAGE_INPUT_MODELS.includes(draft.model);
   }
 
   function showReference() {
@@ -393,6 +408,7 @@ export function initStudio() {
     form.querySelector(`input[name="duration"][value="${draft.duration}"]`).checked = true;
     refVideoInput.value = draft.refVideoUrl;
     refImagesInput.value = draft.refImageUrls;
+    refImageInput.value = draft.refImageUrl;
     updateVisualSettings();
     showReference();
   }
@@ -532,12 +548,16 @@ export function initStudio() {
       setStatus(`Real generation isn't wired up for ${draft.model} yet — try one of: ${LIVE_MODELS.join(', ')}.`, true);
       return;
     }
-    let refVideoUrl, refImageUrls;
+    let refVideoUrl, refImageUrls, refImageUrl;
     if (REFERENCE_INPUT_MODELS.includes(draft.model)) {
       refVideoUrl = draft.refVideoUrl.trim();
       refImageUrls = draft.refImageUrls.split(/[,\n]/).map(url => url.trim()).filter(Boolean);
       if (!refVideoUrl) { setStatus('Add a reference video URL first.', true); refVideoInput.focus(); return; }
       if (refImageUrls.length === 0) { setStatus('Add at least one character/product image URL.', true); refImagesInput.focus(); return; }
+    }
+    if (IMAGE_INPUT_MODELS.includes(draft.model)) {
+      refImageUrl = draft.refImageUrl.trim();
+      if (!refImageUrl) { setStatus('Add a reference image URL first.', true); refImageInput.focus(); return; }
     }
     currentConcept = {
       id: globalThis.crypto?.randomUUID?.() || `concept-${Date.now()}-${Math.random().toString(36).slice(2)}`,
@@ -551,7 +571,7 @@ export function initStudio() {
     renderConcept();
     setStatus('Starting your generation…');
     try {
-      const job = await requestGeneration({ prompt: draft.prompt.trim(), duration: Number(draft.duration), aspectRatio: draft.ratio, model: draft.model, videoUrl: refVideoUrl, imageUrls: refImageUrls });
+      const job = await requestGeneration({ prompt: draft.prompt.trim(), duration: Number(draft.duration), aspectRatio: draft.ratio, model: draft.model, videoUrl: refVideoUrl, imageUrls: refImageUrls, imageUrl: refImageUrl });
       setStatus('Queued…');
       pollGeneration(job.id);
     } catch (error) {
