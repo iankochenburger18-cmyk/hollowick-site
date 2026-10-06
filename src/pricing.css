@@ -1,0 +1,126 @@
+/* Pricing page — built from the same tokens as the rest of Hollowick
+   (--ink, --paper, --lime, --muted, --line, --pad, --ease from styles.css). */
+
+.pricing-intro {
+  padding: 150px var(--pad) 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 40px;
+}
+.pricing-heading h1 {
+  font-size: clamp(34px, 5.4vw, 64px);
+  line-height: 1.04;
+  letter-spacing: -.01em;
+  max-width: 820px;
+}
+.pricing-heading p {
+  margin-top: 26px;
+  max-width: 540px;
+  font-size: 14px;
+  line-height: 1.75;
+  color: var(--muted);
+}
+
+.pricing-grid-section { padding: 50px var(--pad) 10px; }
+.pricing-grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 16px;
+}
+
+.pricing-card {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+  padding: 28px 24px 26px;
+  border: 1px solid var(--line);
+  border-radius: 16px;
+  background: #1c1e18;
+  min-width: 0;
+}
+.pricing-card--top {
+  border-color: rgba(213, 237, 131, .4);
+  background: linear-gradient(165deg, #22261a, #1c1e18 55%);
+}
+
+.pricing-card-head { display: flex; flex-direction: column; gap: 10px; }
+.pricing-eyebrow {
+  display: inline-flex;
+  width: fit-content;
+  padding: 5px 10px;
+  border: 1px solid var(--line);
+  border-radius: 20px;
+  letter-spacing: .12em;
+  color: var(--paper);
+}
+.pricing-card--top .pricing-eyebrow { border-color: rgba(213, 237, 131, .55); color: var(--lime); }
+.pricing-card-for { font-size: 12px; line-height: 1.6; color: var(--muted); min-height: 38px; }
+
+.pricing-price { display: flex; align-items: baseline; gap: 6px; }
+.pricing-price span:first-child { font-size: 38px; font-weight: 600; letter-spacing: -.02em; }
+.pricing-period { font-size: 12px; color: var(--muted); }
+
+.pricing-stat {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  padding-top: 14px;
+  border-top: 1px solid var(--line);
+}
+.pricing-stat-figure { font-size: 15px; font-weight: 600; font-variant-numeric: tabular-nums; }
+.pricing-stat-label { font-size: 11px; color: var(--muted); }
+
+.pricing-range { font-size: 12px; line-height: 1.7; }
+.pricing-range strong { font-weight: 600; }
+.pricing-range span { display: block; font-size: 11px; color: var(--muted); margin-top: 2px; }
+
+.pricing-models {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  align-content: flex-start;
+  gap: 6px;
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  flex: 1;
+}
+.pricing-chip {
+  font-family: 'Courier New', monospace;
+  font-size: 9px;
+  letter-spacing: .03em;
+  line-height: 1.4;
+  padding: 6px 9px;
+  border: 1px solid var(--line);
+  border-radius: 20px;
+  color: var(--paper);
+  background: rgba(242, 241, 233, .04);
+}
+.pricing-chip--muted {
+  border-color: transparent;
+  background: none;
+  padding-left: 0;
+  color: var(--muted);
+  font-style: italic;
+  width: 100%;
+}
+
+.pricing-cta { width: 100%; margin-top: auto; }
+
+.pricing-faq {
+  padding: 90px var(--pad) 100px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.pricing-faq-heading h2 { font-size: clamp(28px, 4vw, 44px); line-height: 1.08; margin-top: 18px; }
+.pricing-faq-list { max-width: 720px; }
+
+@media (max-width: 1100px) {
+  .pricing-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+@media (max-width: 640px) {
+  .pricing-intro { padding-top: 130px; }
+  .pricing-grid { grid-template-columns: 1fr; }
+  .pricing-card-for { min-height: 0; }
+}

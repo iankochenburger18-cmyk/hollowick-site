@@ -15,9 +15,10 @@ export function initFooter() {
       </div>
       <nav class="hf-column" aria-label="Product">
         <h2>Product</h2>
-        <a href="#models">The models</a>
-        <a href="#possibilities">Explore</a>
-        <a href="#how-it-works">How it works</a>
+        <a href="/#models">The models</a>
+        <a href="/#possibilities">Explore</a>
+        <a href="/#how-it-works">How it works</a>
+        <a href="/pricing/">Pricing</a>
         <button type="button" data-open-studio>Enter the studio ${arrowIcon}</button>
       </nav>
       <nav class="hf-column" aria-label="Company">
