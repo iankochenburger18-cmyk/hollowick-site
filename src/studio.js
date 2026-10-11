@@ -1,7 +1,12 @@
-import { registerAccount, signIn as apiSignIn, signOut as apiSignOut, getSession, requestGeneration, listGenerations, getGeneration } from './api.js';
+import { registerAccount, signIn as apiSignIn, signOut as apiSignOut, getSession, requestGeneration, listGenerations, getGeneration, startCheckout } from './api.js';
 
 const STORAGE_KEY = 'hollowick-studio-draft-v1';
 const CONCEPTS_KEY = 'hollowick-studio-concepts-v1';
+// A pricing-card button carries data-plan="STARTER" (etc.) — see navigate()
+// below. Keep in sync with the backend's paid tiers (src/lib/stripe.ts's
+// PaidPlanTier — everything except TRIAL, which isn't purchasable).
+const PLAN_TIERS = ['STARTER', 'CREATOR', 'PRO', 'STUDIO'];
+const CHECKOUT_INTENT_KEY = 'hollowick-checkout-intent-v1';
 const MODELS = ['Veo 3.1', 'Gen-4.5', 'Kling 3.0', 'Kling 2.6', 'Kling 2.5', 'Ray3', 'Seedance 2.5', 'Seedance 2.0', 'PixVerse v6', 'MiniMax H3 Max Turbo', 'MiniMax Hailuo', 'Wan 3.0 Prime', 'Wan 3.0', 'Wan 2.7', 'LTX 2.5 Fast', 'LTX 2.5 Pro', 'Happy Horse 1.1', 'Happy Horse 1.0', 'Genjutsu', 'Cinema Studio 4.0'];
 // Keep in sync with MODEL_TO_PROVIDER in the backend's
 // src/lib/video-providers/index.ts — a model only belongs here once its
@@ -68,6 +73,26 @@ function writeStorage(key, value) {
   catch { return false; }
 }
 
+// Carries a pricing-card click's intended plan across the redirect into
+// /studio/ — same two-storage pattern as the draft handoff above, since
+// either one can be unavailable (private browsing, blocked storage, etc).
+function writeCheckoutIntent(tier) {
+  try { sessionStorage.setItem(CHECKOUT_INTENT_KEY, tier); } catch { /* Optional storage. */ }
+  try { localStorage.setItem(CHECKOUT_INTENT_KEY, tier); } catch { /* Optional storage. */ }
+}
+
+function readCheckoutIntent() {
+  let tier = null;
+  try { tier = sessionStorage.getItem(CHECKOUT_INTENT_KEY); } catch { /* Optional storage. */ }
+  if (!tier) { try { tier = localStorage.getItem(CHECKOUT_INTENT_KEY); } catch { /* Optional storage. */ } }
+  return PLAN_TIERS.includes(tier) ? tier : null;
+}
+
+function clearCheckoutIntent() {
+  try { sessionStorage.removeItem(CHECKOUT_INTENT_KEY); } catch { /* Optional storage. */ }
+  try { localStorage.removeItem(CHECKOUT_INTENT_KEY); } catch { /* Optional storage. */ }
+}
+
 function validDraft(value = {}) {
   value = value && typeof value === 'object' && !Array.isArray(value) ? value : {};
   const referenceType = value.referenceType === 'upload' || (typeof value.reference === 'string' && value.reference.startsWith('Uploaded reference:')) ? 'upload' : 'preset';
@@ -122,6 +147,16 @@ export function initStudioNavigation() {
     writeStorage(STORAGE_KEY, draft);
     // Session storage also allows handoff when persistent storage is unavailable.
     try { sessionStorage.setItem(STORAGE_KEY, JSON.stringify(draft)); } catch { /* Optional storage. */ }
+    // Pricing-card buttons (pricing/index.html) carry data-plan="STARTER"
+    // etc. — stash which plan they picked so the studio page can kick off a
+    // real Stripe Checkout session for it automatically, once we know
+    // they're signed in (see maybeStartCheckout() in initStudio() below).
+    // Any other "Enter the studio" button has no data-plan and explicitly
+    // clears a stale intent, so navigating in generically never triggers an
+    // unexpected checkout from an earlier, abandoned pricing-card click.
+    const plan = PLAN_TIERS.find(value => value === String(trigger.plan || '').toUpperCase());
+    if (plan) writeCheckoutIntent(plan);
+    else clearCheckoutIntent();
     window.location.assign('/studio/');
   };
   document.addEventListener('click', event => {
@@ -505,6 +540,24 @@ export function initStudio() {
     else $('[data-hw-generations-wrap]').hidden = true;
   }
 
+  // If a pricing-card click left a plan tier waiting (see navigate() in
+  // initStudioNavigation above), and we now know the visitor is signed in —
+  // either they already had a session when this page loaded, or they just
+  // signed in/signed up below — send them straight to a real Stripe
+  // Checkout session for it. A no-op whenever there's nothing pending.
+  async function maybeStartCheckout() {
+    const tier = readCheckoutIntent();
+    if (!tier || !session?.user) return;
+    clearCheckoutIntent();
+    setAccountStatus('Redirecting you to checkout…');
+    try {
+      const url = await startCheckout(tier);
+      window.location.href = url;
+    } catch (error) {
+      setAccountStatus(error.message || 'Could not start checkout — try picking the plan again from the pricing page.', true);
+    }
+  }
+
   async function refreshGenerationsList() {
     try {
       const jobs = await listGenerations();
@@ -593,6 +646,7 @@ export function initStudio() {
       setAccountStatus('Signed in.');
       authForm.querySelector('[name="email"]').value = '';
       authForm.querySelector('[name="password"]').value = '';
+      await maybeStartCheckout();
     } catch (error) {
       setAccountStatus(error.message || 'Could not sign in.', true);
     } finally {
@@ -615,6 +669,7 @@ export function initStudio() {
       setAccountStatus('Account created and signed in.');
       authForm.querySelector('[name="email"]').value = '';
       authForm.querySelector('[name="password"]').value = '';
+      await maybeStartCheckout();
     } catch (error) {
       setAccountStatus(error.message || 'Could not create your account.', true);
     } finally {
@@ -834,7 +889,7 @@ export function initStudio() {
   applyDraft();
   updateSavedConcepts();
   renderAccount();
-  refreshSession();
+  refreshSession().then(maybeStartCheckout);
   persistDraft();
   if (draft.referenceType === 'upload') setStatus('Add your reference again; uploaded images aren’t stored.');
   videoElement.addEventListener('error', () => {

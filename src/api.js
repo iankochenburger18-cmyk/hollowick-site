@@ -99,3 +99,19 @@ export async function getGeneration(id) {
   if (!response.ok) throw new Error(data?.error || 'Could not check on that generation.');
   return data;
 }
+
+// Starts a real Stripe Checkout session for the given paid tier ('STARTER' |
+// 'CREATOR' | 'PRO' | 'STUDIO') and returns the URL to redirect the browser
+// to. Requires a signed-in session — the backend returns 401 otherwise, same
+// as requestGeneration() above.
+export async function startCheckout(tier) {
+  const response = await apiFetch('/api/billing/checkout', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ tier }),
+  });
+  const data = await readJSON(response);
+  if (response.status === 401) throw new Error('Sign in to choose a plan.');
+  if (!response.ok || !data?.url) throw new Error(data?.error || 'Could not start checkout.');
+  return data.url;
+}
