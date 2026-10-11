@@ -59,7 +59,7 @@
             <li class="pricing-chip">Happy Horse 1.0</li>
             <li class="pricing-chip">Kling 2.5</li>
           </ul>
-          <button class="button button-dark pricing-cta" type="button" data-open-studio data-plan="STARTER">Enter the studio <svg><use href="#arrow-up"/></svg></button>
+          <button class="button button-dark pricing-cta" type="button" data-plan-cta="STARTER" disabled><span class="pricing-cta-label">Enter the studio</span> <svg><use href="#arrow-up"/></svg></button>
         </article>
 
         <article class="pricing-card reveal" aria-labelledby="plan-creator">
@@ -81,7 +81,7 @@
             <li class="pricing-chip">MiniMax Hailuo</li>
             <li class="pricing-chip">Kling 2.6</li>
           </ul>
-          <button class="button button-dark pricing-cta" type="button" data-open-studio data-plan="CREATOR">Enter the studio <svg><use href="#arrow-up"/></svg></button>
+          <button class="button button-dark pricing-cta" type="button" data-plan-cta="CREATOR" disabled><span class="pricing-cta-label">Enter the studio</span> <svg><use href="#arrow-up"/></svg></button>
         </article>
 
         <article class="pricing-card reveal" aria-labelledby="plan-pro">
@@ -105,7 +105,7 @@
             <li class="pricing-chip">LTX 2.5 Pro</li>
             <li class="pricing-chip">Wan 2.7</li>
           </ul>
-          <button class="button button-dark pricing-cta" type="button" data-open-studio data-plan="PRO">Enter the studio <svg><use href="#arrow-up"/></svg></button>
+          <button class="button button-dark pricing-cta" type="button" data-plan-cta="PRO" disabled><span class="pricing-cta-label">Enter the studio</span> <svg><use href="#arrow-up"/></svg></button>
         </article>
 
         <article class="pricing-card pricing-card--top reveal" aria-labelledby="plan-studio">
@@ -126,10 +126,11 @@
             <li class="pricing-chip">Wan 3.0 Prime</li>
             <li class="pricing-chip">Veo 3.1</li>
           </ul>
-          <button class="button button-lime pricing-cta" type="button" data-open-studio data-plan="STUDIO">Enter the studio <svg><use href="#arrow-up"/></svg></button>
+          <button class="button button-lime pricing-cta" type="button" data-plan-cta="STUDIO" disabled><span class="pricing-cta-label">Enter the studio</span> <svg><use href="#arrow-up"/></svg></button>
         </article>
 
       </div>
+      <p id="pricing-cta-status" class="pricing-cta-status" role="status" aria-live="polite"></p>
     </section>
 
     <section class="pricing-faq section-light" aria-labelledby="faq-title">

@@ -1,0 +1,94 @@
+/* Sign-in page — built from the same tokens as the rest of Hollowick
+   (--ink, --paper, --lime, --muted, --line, --pad, --ease from styles.css). */
+
+.signin-section {
+  min-height: 100vh;
+  padding: 150px var(--pad) 120px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.signin-card {
+  width: 100%;
+  max-width: 420px;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  padding: 34px 30px 30px;
+  border: 1px solid var(--line);
+  border-radius: 16px;
+  background: #1c1e18;
+}
+
+.signin-card h1 {
+  font-size: clamp(26px, 4vw, 34px);
+  line-height: 1.1;
+  letter-spacing: -.01em;
+  margin-top: 8px;
+}
+
+.signin-sub {
+  font-size: 13px;
+  line-height: 1.6;
+  color: var(--muted);
+  max-width: 340px;
+}
+
+.signin-form {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-top: 10px;
+}
+
+.signin-label {
+  font-size: 11px;
+  letter-spacing: .01em;
+  color: var(--muted);
+  margin: 10px 0 2px;
+}
+.signin-label:first-child { margin-top: 0; }
+
+.signin-input {
+  width: 100%;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  background: rgba(242, 241, 233, .04);
+  color: var(--paper);
+  font-size: 14px;
+  padding: 13px 14px;
+  transition: border-color .2s;
+}
+.signin-input::placeholder { color: var(--muted); opacity: 1; }
+.signin-input:focus-visible { outline: none; border-color: rgba(213, 237, 131, .55); }
+
+.signin-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-top: 16px;
+}
+.signin-submit { flex: 1; min-width: 150px; margin-top: 0; min-width: 0; }
+.signin-submit:disabled { opacity: .5; cursor: default; }
+
+.signin-status {
+  min-height: 14px;
+  font-size: 12px;
+  line-height: 1.6;
+  color: var(--muted);
+}
+.signin-status:empty { display: none; }
+.signin-status--error { color: #e4ab8e; }
+
+.signin-foot {
+  margin-top: 6px;
+  font-size: 12px;
+}
+.signin-foot a { color: var(--muted); text-decoration: underline; text-underline-offset: 3px; }
+.signin-foot a:hover { color: var(--paper); }
+
+@media (max-width: 640px) {
+  .signin-section { padding-top: 130px; }
+  .signin-card { padding: 28px 22px 24px; }
+}

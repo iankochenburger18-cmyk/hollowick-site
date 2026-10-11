@@ -103,7 +103,8 @@ export async function getGeneration(id) {
 // Starts a real Stripe Checkout session for the given paid tier ('STARTER' |
 // 'CREATOR' | 'PRO' | 'STUDIO') and returns the URL to redirect the browser
 // to. Requires a signed-in session — the backend returns 401 otherwise, same
-// as requestGeneration() above.
+// as requestGeneration() above. Only for an account with no active paid
+// subscription yet (a trial, or a lapsed one) — see getBillingStatus().
 export async function startCheckout(tier) {
   const response = await apiFetch('/api/billing/checkout', {
     method: 'POST',
@@ -113,5 +114,27 @@ export async function startCheckout(tier) {
   const data = await readJSON(response);
   if (response.status === 401) throw new Error('Sign in to choose a plan.');
   if (!response.ok || !data?.url) throw new Error(data?.error || 'Could not start checkout.');
+  return data.url;
+}
+
+// Tells the caller whether anyone's signed in and, if so, what plan tier
+// they're on and whether it's currently active — used by the pricing page
+// to decide what each plan card's button should do (see pricing.js).
+export async function getBillingStatus() {
+  const response = await apiFetch('/api/billing/status');
+  if (!response.ok) return { signedIn: false };
+  return readJSON(response) ?? { signedIn: false };
+}
+
+// Starts a Stripe Billing Portal session for an account that already has an
+// active paid subscription (cancelling or switching tiers) and returns the
+// URL to redirect to. Using this instead of startCheckout() again is what
+// avoids creating a second, parallel subscription for someone who already
+// has one.
+export async function startPortal() {
+  const response = await apiFetch('/api/billing/portal', { method: 'POST' });
+  const data = await readJSON(response);
+  if (response.status === 401) throw new Error('Sign in first.');
+  if (!response.ok || !data?.url) throw new Error(data?.error || 'Could not open billing settings.');
   return data.url;
 }

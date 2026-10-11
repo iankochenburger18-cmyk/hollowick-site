@@ -4,6 +4,7 @@ await mkdir(new URL('dist',root),{recursive:true});
 await cp(new URL('index.html',root),new URL('dist/index.html',root));
 await cp(new URL('studio',root),new URL('dist/studio',root),{recursive:true});
 await cp(new URL('pricing',root),new URL('dist/pricing',root),{recursive:true});
+await cp(new URL('signin',root),new URL('dist/signin',root),{recursive:true});
 await cp(new URL('src',root),new URL('dist/src',root),{recursive:true});
 await cp(new URL('public',root),new URL('dist',root),{recursive:true});
 console.log('Built static website in dist/. No runtime dependencies.');
