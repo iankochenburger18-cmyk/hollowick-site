@@ -35,6 +35,14 @@ async function getCsrfToken() {
 }
 
 export async function signIn(email, password) {
+  // Clear any existing session first. Without this, a sign-in attempt that
+  // actually fails (wrong password, account no longer exists under this
+  // session's old id, etc.) can still leave a *previous* valid session
+  // cookie sitting in the browser — and since the only success signal below
+  // is "does a session exist afterward", that stale leftover session reads
+  // as a successful sign-in even though this attempt did nothing. Starting
+  // from a clean slate means a failed attempt reliably leaves no session.
+  await signOut();
   const csrfToken = await getCsrfToken();
   await apiFetch('/api/auth/callback/credentials?json=true', {
     method: 'POST',
