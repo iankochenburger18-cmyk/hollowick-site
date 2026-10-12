@@ -209,6 +209,11 @@
 .hw-studio-account-user { display: flex; align-items: center; justify-content: space-between; gap: 10px; flex-wrap: wrap; }
 .hw-studio-account-status { color: #858b7b; font-size: 9px; line-height: 1.5; margin: 0; min-height: 11px; }
 .hw-studio-account-status--error { color: #e4ab8e; }
+.hw-studio-account-nudge { display: flex; align-items: center; justify-content: space-between; gap: 10px; flex-wrap: wrap; padding: 8px 10px; border: 1px solid #45432a; border-radius: 8px; background: #2b2819; }
+.hw-studio-account-nudge span { color: #d8cf9e; font-size: 9px; line-height: 1.5; }
+.hw-studio-account-nudge-btn { border: none; background: none; color: var(--hw-lime); font-size: 9px; text-decoration: underline; text-underline-offset: 2px; white-space: nowrap; }
+.hw-studio-account-nudge-btn:hover { color: var(--hw-ivory); }
+.hw-studio-account-nudge-btn:disabled { color: #858b7b; text-decoration: none; }
 
 /* Genjutsu reference-input fields, shown only when that model is selected */
 .hw-studio-genjutsu-fields { display: flex; flex-direction: column; gap: 8px; }

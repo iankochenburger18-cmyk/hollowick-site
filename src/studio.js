@@ -1,4 +1,4 @@
-import { registerAccount, signIn as apiSignIn, signOut as apiSignOut, getSession, requestGeneration, listGenerations, getGeneration } from './api.js';
+import { registerAccount, signIn as apiSignIn, signOut as apiSignOut, getSession, getBillingStatus, resendVerificationEmail, requestGeneration, listGenerations, getGeneration } from './api.js';
 
 const STORAGE_KEY = 'hollowick-studio-draft-v1';
 const CONCEPTS_KEY = 'hollowick-studio-concepts-v1';
@@ -219,6 +219,10 @@ export function initStudio() {
               <span class="hw-studio-label">Signed in as <strong data-hw-account-email></strong></span>
               <button type="button" class="hw-studio-account-btn hw-studio-account-btn--ghost" data-hw-signout>Sign out</button>
             </div>
+            <div class="hw-studio-account-nudge" data-hw-verify-nudge hidden>
+              <span>Confirm your email to secure your account.</span>
+              <button type="button" class="hw-studio-account-nudge-btn" data-hw-resend-verify>Resend confirmation email</button>
+            </div>
             <p class="hw-studio-account-status" data-hw-account-status role="status" aria-live="polite"></p>
           </section>
           <div class="hw-studio-settings-grid">
@@ -271,6 +275,12 @@ export function initStudio() {
   const accountEmail = $('[data-hw-account-email]');
   const accountStatus = $('[data-hw-account-status]');
   const authForm = $('[data-hw-auth-form]');
+  const verifyNudge = $('[data-hw-verify-nudge]');
+  const resendVerifyBtn = $('[data-hw-resend-verify]');
+  // Defaults to "don't nudge" until a real status comes back, so a signed-in
+  // reload doesn't flash the nudge on for an already-confirmed account while
+  // the billing-status fetch is still in flight.
+  let emailVerified = true;
 
   function setSidebarOpen(open, restoreFocus = true) {
     open = mobileLayout.matches && open;
@@ -493,16 +503,30 @@ export function initStudio() {
     accountGuest.hidden = signedIn;
     accountUser.hidden = !signedIn;
     if (signedIn) accountEmail.textContent = session.user.email || 'your account';
+    verifyNudge.hidden = !signedIn || emailVerified;
     updateSubmitButton();
     updateDisclosure();
+  }
+
+  // Signed-in access never depends on this — it only decides whether the
+  // small "confirm your email" nudge shows (see data-hw-verify-nudge above).
+  async function refreshEmailVerification() {
+    if (!session?.user) { emailVerified = true; return; }
+    try {
+      const billingStatus = await getBillingStatus();
+      emailVerified = Boolean(billingStatus?.emailVerified);
+    } catch {
+      emailVerified = true; // fail silent rather than nudge on a flaky status check
+    }
+    renderAccount();
   }
 
   async function refreshSession() {
     try { session = await getSession(); }
     catch { session = null; }
     renderAccount();
-    if (session?.user) refreshGenerationsList();
-    else $('[data-hw-generations-wrap]').hidden = true;
+    if (session?.user) { refreshGenerationsList(); refreshEmailVerification(); }
+    else { $('[data-hw-generations-wrap]').hidden = true; emailVerified = true; }
   }
 
   async function refreshGenerationsList() {
@@ -590,6 +614,7 @@ export function initStudio() {
       session = await apiSignIn(email, password);
       renderAccount();
       refreshGenerationsList();
+      refreshEmailVerification();
       setAccountStatus('Signed in.');
       authForm.querySelector('[name="email"]').value = '';
       authForm.querySelector('[name="password"]').value = '';
@@ -612,7 +637,8 @@ export function initStudio() {
       session = await apiSignIn(email, password);
       renderAccount();
       refreshGenerationsList();
-      setAccountStatus('Account created and signed in.');
+      refreshEmailVerification();
+      setAccountStatus('Account created and signed in. Check your email to confirm your address.');
       authForm.querySelector('[name="email"]').value = '';
       authForm.querySelector('[name="password"]').value = '';
     } catch (error) {
@@ -625,11 +651,25 @@ export function initStudio() {
   $('[data-hw-signout]').addEventListener('click', async () => {
     await apiSignOut();
     session = null;
+    emailVerified = true;
     renderAccount();
     setAccountStatus('Signed out.');
     stopPolling();
     activeJob = null;
     showReference();
+  });
+
+  resendVerifyBtn.addEventListener('click', async () => {
+    resendVerifyBtn.disabled = true;
+    setAccountStatus('Sending confirmation email…');
+    try {
+      await resendVerificationEmail();
+      setAccountStatus('Confirmation email sent — check your inbox.');
+    } catch (error) {
+      setAccountStatus(error.message || 'Could not send the confirmation email.', true);
+    } finally {
+      resendVerifyBtn.disabled = false;
+    }
   });
 
   generationsSelect.addEventListener('change', () => {

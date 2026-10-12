@@ -134,6 +134,17 @@ export async function getBillingStatus() {
   return readJSON(response) ?? { signedIn: false };
 }
 
+// Re-sends the confirmation email for the signed-in account — used by the
+// studio's "confirm your email" nudge (see renderAccount()/refreshEmailVerification()
+// in studio.js). Requires a signed-in session, same as startCheckout() above.
+export async function resendVerificationEmail() {
+  const response = await apiFetch('/api/verify-email/resend', { method: 'POST' });
+  const data = await readJSON(response);
+  if (response.status === 401) throw new Error('Sign in first.');
+  if (!response.ok) throw new Error(data?.error || 'Could not send the confirmation email.');
+  return data;
+}
+
 // Starts a Stripe Billing Portal session for an account that already has an
 // active paid subscription (cancelling or switching tiers) and returns the
 // URL to redirect to. Using this instead of startCheckout() again is what
