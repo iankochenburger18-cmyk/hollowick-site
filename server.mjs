@@ -12,7 +12,10 @@ http.createServer(async (req,res)=>{
     if(pathname==='/studio'){res.writeHead(308,{'Location':'/studio/'});res.end();return;}
     if(pathname==='/pricing'){res.writeHead(308,{'Location':'/pricing/'});res.end();return;}
     if(pathname==='/signin'){res.writeHead(308,{'Location':'/signin/'+req.url.replace(/^[^?]*/, '')});res.end();return;}
-    const rel=pathname==='/' ? 'index.html' : pathname==='/studio/' ? 'studio/index.html' : pathname==='/pricing/' ? 'pricing/index.html' : pathname==='/signin/' ? 'signin/index.html' : pathname.replace(/^\/+/, '');
+    if(pathname==='/terms'){res.writeHead(308,{'Location':'/terms/'});res.end();return;}
+    if(pathname==='/privacy'){res.writeHead(308,{'Location':'/privacy/'});res.end();return;}
+    if(pathname==='/refund-policy'){res.writeHead(308,{'Location':'/refund-policy/'});res.end();return;}
+    const rel=pathname==='/' ? 'index.html' : pathname==='/studio/' ? 'studio/index.html' : pathname==='/pricing/' ? 'pricing/index.html' : pathname==='/signin/' ? 'signin/index.html' : pathname==='/terms/' ? 'terms/index.html' : pathname==='/privacy/' ? 'privacy/index.html' : pathname==='/refund-policy/' ? 'refund-policy/index.html' : pathname.replace(/^\/+/, '');
     const asset=!dist && (/^(media|fonts|brand)\//.test(rel) || rel==='favicon.svg');
     const file=resolve(root,asset ? 'public' : '.',rel);
     if(!file.startsWith(root+sep)){res.writeHead(403);res.end();return;}

@@ -1,0 +1,50 @@
+/* Legal pages (Terms, Privacy, Refund Policy) — same tokens as the rest of
+   Hollowick (--ink, --paper, --lime, --muted, --line, --pad from styles.css).
+   Long-form prose, so it leans more readable than the marketing pages: a
+   narrower measure, more line-height, and body text that isn't as dim as
+   --muted. */
+
+.legal-intro {
+  padding: 150px var(--pad) 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+}
+.legal-heading h1 {
+  font-size: clamp(32px, 4.8vw, 56px);
+  line-height: 1.05;
+  letter-spacing: -.01em;
+}
+.legal-updated {
+  font-family: 'Courier New', monospace;
+  font-size: 10px;
+  letter-spacing: .08em;
+  color: var(--muted);
+}
+
+.legal-content {
+  padding: 30px var(--pad) 110px;
+  max-width: 760px;
+}
+.legal-content h2 {
+  margin-top: 46px;
+  font-size: clamp(16px, 1.7vw, 20px);
+  font-weight: 600;
+  letter-spacing: -.01em;
+}
+.legal-content h2:first-child { margin-top: 0; }
+.legal-content p {
+  margin-top: 14px;
+  font-size: 13px;
+  line-height: 1.85;
+  color: rgba(242, 241, 233, .82);
+}
+.legal-content p.legal-emphasis {
+  color: var(--paper);
+}
+.legal-content a { color: var(--lime); text-decoration: underline; text-underline-offset: 2px; }
+.legal-content a:hover { color: var(--paper); }
+
+@media (max-width: 640px) {
+  .legal-intro { padding-top: 130px; }
+}

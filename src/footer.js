@@ -35,7 +35,7 @@ export function initFooter() {
     </div>
     <div class="hf-wordmark-wrap" aria-hidden="true"><span class="hf-wordmark">Hollowick</span></div>
     <div class="hf-bottom">
-      <span>© <span id="year">${new Date().getFullYear()}</span> Hollowick</span>
+      <span class="hf-legal">© <span id="year">${new Date().getFullYear()}</span> Hollowick · <a href="/terms/">Terms</a> · <a href="/privacy/">Privacy</a> · <a href="/refund-policy/">Refunds</a></span>
       <span class="hf-note">A little spark is all it takes.</span>
       <button class="hf-motion" type="button" id="motion-toggle" aria-label="Pause motion" aria-pressed="false"><span class="hf-motion-icon" aria-hidden="true"><i></i><i></i></span><span class="motion-label">Motion on</span></button>
     </div>`;
