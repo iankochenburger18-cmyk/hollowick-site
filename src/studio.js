@@ -1,4 +1,4 @@
-import { registerAccount, signIn as apiSignIn, signOut as apiSignOut, getSession, getBillingStatus, resendVerificationEmail, requestGeneration, listGenerations, getGeneration } from './api.js';
+import { registerAccount, signIn as apiSignIn, signOut as apiSignOut, getSession, getBillingStatus, resendVerificationEmail, requestGeneration, listGenerations, getGeneration, generationVideoUrl } from './api.js';
 
 const STORAGE_KEY = 'hollowick-studio-draft-v1';
 const CONCEPTS_KEY = 'hollowick-studio-concepts-v1';
@@ -377,8 +377,9 @@ export function initStudio() {
       videoElement.loop = false;
       videoElement.muted = false;
       videoElement.controls = true;
-      if (videoElement.getAttribute('src') !== activeJob.resultUrl) {
-        videoElement.src = activeJob.resultUrl;
+      const liveVideoUrl = generationVideoUrl(activeJob.id);
+      if (videoElement.getAttribute('src') !== liveVideoUrl) {
+        videoElement.src = liveVideoUrl;
         videoElement.removeAttribute('poster');
         videoElement.setAttribute('aria-label', `${currentConcept?.model || draft.model} — your generated video`);
         videoElement.load();

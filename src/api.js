@@ -108,6 +108,17 @@ export async function getGeneration(id) {
   return data;
 }
 
+// Streams a completed generation's video through our own backend domain
+// rather than linking straight to the storage provider's own hostname —
+// some up-to-date browsers get an outright TLS handshake reset talking
+// directly to the object storage host, confirmed across three different TLS
+// stacks on two unrelated networks. This endpoint shares the session cookie
+// (.hollowick.app) the same way every other API_BASE call does, so no extra
+// auth wiring is needed here — the <video> element just needs this URL.
+export function generationVideoUrl(id) {
+  return `${API_BASE}/api/videos/${encodeURIComponent(id)}`;
+}
+
 // Starts a real Stripe Checkout session for the given paid tier ('STARTER' |
 // 'CREATOR' | 'PRO' | 'STUDIO') and returns the URL to redirect the browser
 // to. Requires a signed-in session — the backend returns 401 otherwise, same
