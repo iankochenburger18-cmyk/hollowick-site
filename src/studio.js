@@ -15,6 +15,17 @@ const REFERENCE_INPUT_MODELS = ['Genjutsu'];
 // instead of a text-only prompt. Keep in sync with MODEL_TO_PROVIDER in the
 // backend's src/lib/video-providers/index.ts.
 const IMAGE_INPUT_MODELS = ['Kling 2.5'];
+// Models whose length isn't user-configurable — keep in sync with
+// MODEL_BASE_DURATION_SECONDS in the backend's src/lib/plans.ts (a model
+// belongs here if and only if it's absent from that map). Veo 3.1 always
+// returns a fixed-length clip (no duration param at all); Genjutsu's length
+// comes from the reference video you supply, not an output-duration field.
+const DURATION_LOCKED_MODELS = ['Veo 3.1', 'Genjutsu'];
+// Keep in sync with DURATION_MIN_SECONDS/DURATION_MAX_SECONDS in plans.ts —
+// this is just the UI-facing copy of the same bounds; the backend clamps
+// independently and is the real trust boundary.
+const DURATION_MIN_SECONDS = 3;
+const DURATION_MAX_SECONDS = 20;
 const PRESETS = {
   dunes: {
     label: 'Desert dream',
@@ -68,6 +79,17 @@ function writeStorage(key, value) {
   catch { return false; }
 }
 
+// '' means "Auto" — omit duration entirely and let the provider pick its
+// own default (see the `duration` field in requestGeneration's payload).
+// Anything else gets clamped into the shared bounds and rounded to a whole
+// second, same as the backend does independently in generate/route.ts.
+function normalizeDuration(raw) {
+  if (raw === '' || raw === null || raw === undefined) return '';
+  const n = Number(raw);
+  if (!Number.isFinite(n)) return '';
+  return String(Math.min(DURATION_MAX_SECONDS, Math.max(DURATION_MIN_SECONDS, Math.round(n))));
+}
+
 function validDraft(value = {}) {
   value = value && typeof value === 'object' && !Array.isArray(value) ? value : {};
   const referenceType = value.referenceType === 'upload' || (typeof value.reference === 'string' && value.reference.startsWith('Uploaded reference:')) ? 'upload' : 'preset';
@@ -76,8 +98,7 @@ function validDraft(value = {}) {
     prompt: typeof value.prompt === 'string' ? value.prompt.slice(0, 1600) : '',
     model: MODELS.includes(value.model) ? value.model : MODELS[0],
     ratio: ['16:9', '9:16', '1:1'].includes(value.ratio) ? value.ratio : '16:9',
-    duration: value.duration === 10 || value.duration === '10' ? '10' : '5',
-    camera: ['Slow dolly in', 'Gentle orbit', 'Locked-off', 'Handheld follow'].includes(value.camera) ? value.camera : 'Slow dolly in',
+    duration: normalizeDuration(value.duration),
     preset: typeof value.preset === 'string' && Object.hasOwn(PRESETS, value.preset) ? value.preset : 'dunes',
     referenceType,
     referenceName: referenceType === 'upload' ? (typeof value.referenceName === 'string' ? value.referenceName : legacyName).trim().slice(0, 255) || 'Your uploaded reference' : '',
@@ -165,7 +186,10 @@ export function initStudio() {
   studio.innerHTML = `
     <div class="hw-studio-shell">
       <header class="hw-studio-header">
-        <a class="hw-studio-brand" href="/" aria-label="Hollowick home"><img class="hw-studio-brand-logo" src="/brand/hollowick-mark-chartreuse.png" width="25" height="27" alt=""/><span>hollowick <span class="hw-studio-brand-divider">/</span> <span class="hw-studio-brand-section">studio</span></span></a>
+        <div class="hw-studio-brand-group">
+          <a class="hw-studio-brand" href="/" aria-label="Hollowick home"><img class="hw-studio-brand-logo" src="/brand/hollowick-mark-chartreuse.png" width="25" height="27" alt=""/><span>hollowick <span class="hw-studio-brand-divider">/</span> <span class="hw-studio-brand-section">studio</span></span></a>
+          <span class="hw-studio-credits" data-hw-credits hidden></span>
+        </div>
         <div class="hw-studio-header-actions"><a class="hw-studio-home" href="/#possibilities">Explore films ${icon.arrow}</a><button class="hw-studio-settings-toggle" type="button" data-hw-settings-toggle aria-expanded="false" aria-controls="hw-studio-sidebar" aria-label="Open scene settings">${icon.settings}</button></div>
       </header>
       <h1 id="hw-studio-title" class="hw-studio-visually-hidden">Hollowick video studio</h1>
@@ -227,8 +251,7 @@ export function initStudio() {
           </section>
           <div class="hw-studio-settings-grid">
             <fieldset class="hw-studio-fieldset"><legend class="hw-studio-label">Aspect ratio</legend><div class="hw-studio-segmented">${['16:9','9:16','1:1'].map(ratio => `<label class="hw-studio-segment"><input type="radio" name="ratio" value="${ratio}"><span><i class="hw-studio-ratio-icon hw-studio-ratio-icon--${ratio.replace(':', '-')}" aria-hidden="true"></i>${ratio}</span></label>`).join('')}</div></fieldset>
-            <fieldset class="hw-studio-fieldset"><legend class="hw-studio-label">Duration</legend><div class="hw-studio-segmented hw-studio-segmented--duration">${['5','10'].map(duration => `<label class="hw-studio-segment"><input type="radio" name="duration" value="${duration}"><span>${duration}s</span></label>`).join('')}</div></fieldset>
-            <div><label class="hw-studio-label" for="hw-studio-camera">Camera movement</label><select id="hw-studio-camera" name="camera"><option>Slow dolly in</option><option>Gentle orbit</option><option>Locked-off</option><option>Handheld follow</option></select></div>
+            <fieldset class="hw-studio-fieldset" data-hw-duration-field><legend class="hw-studio-label">Length</legend><input class="hw-studio-text-input hw-studio-duration-input" type="number" id="hw-studio-duration" name="duration" min="${DURATION_MIN_SECONDS}" max="${DURATION_MAX_SECONDS}" step="1" inputmode="numeric" placeholder="Auto"><p class="hw-studio-field-hint">Seconds — leave blank to let the model decide.</p><p class="hw-studio-field-hint" data-hw-duration-locked-hint hidden></p></fieldset>
           </div>
           <div class="hw-studio-genjutsu-fields" data-hw-genjutsu-fields hidden>
             <label class="hw-studio-label" for="hw-studio-ref-video">Reference video URL</label>
@@ -253,11 +276,13 @@ export function initStudio() {
   const form = $('#hw-studio-form');
   const prompt = $('#hw-studio-prompt');
   const modelSelect = $('#hw-studio-model');
-  const cameraSelect = $('#hw-studio-camera');
+  const durationInput = $('#hw-studio-duration');
+  const durationLockedHint = $('[data-hw-duration-locked-hint]');
   const savedSelect = $('#hw-studio-saved');
   const generationsSelect = $('[data-hw-generations]');
   const status = $('[data-hw-status]');
   const disclosure = $('#hw-studio-disclosure');
+  const creditsDisplay = $('[data-hw-credits]');
   const submitBtn = $('[data-hw-submit]');
   const imageElement = $('[data-hw-image]');
   const videoElement = $('[data-hw-video]');
@@ -333,7 +358,7 @@ export function initStudio() {
 
   function syncDraftFromForm() {
     const data = new FormData(form);
-    draft = validDraft({ ...draft, prompt: data.get('prompt'), model: data.get('model'), ratio: data.get('ratio'), duration: data.get('duration'), camera: data.get('camera'), refVideoUrl: data.get('refVideoUrl'), refImageUrls: data.get('refImageUrls'), refImageUrl: data.get('refImageUrl') });
+    draft = validDraft({ ...draft, prompt: data.get('prompt'), model: data.get('model'), ratio: data.get('ratio'), duration: data.get('duration'), refVideoUrl: data.get('refVideoUrl'), refImageUrls: data.get('refImageUrls'), refImageUrl: data.get('refImageUrl') });
     updateVisualSettings();
     persistDraft();
     if (currentConcept && !conceptMatchesDraft()) {
@@ -343,7 +368,7 @@ export function initStudio() {
   }
 
   function conceptMatchesDraft() {
-    return currentConcept && ['model', 'ratio', 'duration', 'camera', 'preset', 'referenceType', 'referenceName'].every(key => currentConcept[key] === draft[key]) && currentConcept.prompt === draft.prompt.trim();
+    return currentConcept && ['model', 'ratio', 'duration', 'preset', 'referenceType', 'referenceName'].every(key => currentConcept[key] === draft[key]) && currentConcept.prompt === draft.prompt.trim();
   }
 
   function updateVisualSettings() {
@@ -354,6 +379,14 @@ export function initStudio() {
     studio.querySelectorAll('[data-hw-preset]').forEach(button => button.setAttribute('aria-pressed', String(draft.referenceType === 'preset' && button.dataset.hwPreset === draft.preset)));
     genjutsuFields.hidden = !REFERENCE_INPUT_MODELS.includes(draft.model);
     imageInputFields.hidden = !IMAGE_INPUT_MODELS.includes(draft.model);
+    const durationLocked = DURATION_LOCKED_MODELS.includes(draft.model);
+    durationInput.disabled = durationLocked;
+    durationLockedHint.hidden = !durationLocked;
+    if (durationLocked) {
+      durationLockedHint.textContent = draft.model === 'Veo 3.1'
+        ? 'Veo 3.1 always generates a fixed-length clip.'
+        : 'Genjutsu’s length comes from your reference video, not this setting.';
+    }
   }
 
   function showReference() {
@@ -414,9 +447,8 @@ export function initStudio() {
     prompt.value = draft.prompt;
     if (draft.prompt.trim()) prompt.removeAttribute('aria-invalid');
     modelSelect.value = draft.model;
-    cameraSelect.value = draft.camera;
     form.querySelector(`input[name="ratio"][value="${draft.ratio}"]`).checked = true;
-    form.querySelector(`input[name="duration"][value="${draft.duration}"]`).checked = true;
+    durationInput.value = draft.duration;
     refVideoInput.value = draft.refVideoUrl;
     refImagesInput.value = draft.refImageUrls;
     refImageInput.value = draft.refImageUrl;
@@ -456,7 +488,7 @@ export function initStudio() {
     description.textContent = currentConcept.prompt;
     const metadata = document.createElement('div');
     metadata.className = 'hw-studio-concept-meta';
-    for (const value of [currentConcept.model, `${currentConcept.duration}s`, currentConcept.ratio, currentConcept.camera]) {
+    for (const value of [currentConcept.model, currentConcept.duration ? `${currentConcept.duration}s` : 'Auto length', currentConcept.ratio]) {
       const item = document.createElement('span');
       item.textContent = value;
       metadata.append(item);
@@ -511,13 +543,24 @@ export function initStudio() {
 
   // Signed-in access never depends on this — it only decides whether the
   // small "confirm your email" nudge shows (see data-hw-verify-nudge above).
+  function renderCredits(billingStatus) {
+    if (typeof billingStatus?.creditsRemaining === 'number') {
+      creditsDisplay.textContent = `${billingStatus.creditsRemaining.toLocaleString()} credits left`;
+      creditsDisplay.hidden = false;
+    } else {
+      creditsDisplay.hidden = true;
+    }
+  }
+
   async function refreshEmailVerification() {
-    if (!session?.user) { emailVerified = true; return; }
+    if (!session?.user) { emailVerified = true; creditsDisplay.hidden = true; return; }
     try {
       const billingStatus = await getBillingStatus();
       emailVerified = Boolean(billingStatus?.emailVerified);
+      renderCredits(billingStatus);
     } catch {
       emailVerified = true; // fail silent rather than nudge on a flaky status check
+      creditsDisplay.hidden = true;
     }
     renderAccount();
   }
@@ -527,7 +570,7 @@ export function initStudio() {
     catch { session = null; }
     renderAccount();
     if (session?.user) { refreshGenerationsList(); refreshEmailVerification(); }
-    else { $('[data-hw-generations-wrap]').hidden = true; emailVerified = true; }
+    else { $('[data-hw-generations-wrap]').hidden = true; emailVerified = true; creditsDisplay.hidden = true; }
   }
 
   async function refreshGenerationsList() {
@@ -596,8 +639,16 @@ export function initStudio() {
     renderConcept();
     setStatus('Starting your generation…');
     try {
-      const job = await requestGeneration({ prompt: draft.prompt.trim(), duration: Number(draft.duration), aspectRatio: draft.ratio, model: draft.model, videoUrl: refVideoUrl, imageUrls: refImageUrls, imageUrl: refImageUrl });
+      // '' (Auto) must stay undefined here, not become 0 — JSON.stringify
+      // drops an undefined value entirely, which is what tells the backend
+      // to use the model's own default length (see duration handling in
+      // src/app/api/generate/route.ts).
+      const job = await requestGeneration({ prompt: draft.prompt.trim(), duration: draft.duration ? Number(draft.duration) : undefined, aspectRatio: draft.ratio, model: draft.model, videoUrl: refVideoUrl, imageUrls: refImageUrls, imageUrl: refImageUrl });
       setStatus('Queued…');
+      // The credit charge lands the moment the job is created server-side
+      // (before generation even starts), so refresh the corner readout now
+      // rather than waiting for completion.
+      getBillingStatus().then(renderCredits).catch(() => {});
       pollGeneration(job.id);
     } catch (error) {
       setStatus(error.message || 'Could not start your video generation.', true);
@@ -796,9 +847,8 @@ export function initStudio() {
       '',
       'DIRECTION',
       `Model: ${currentConcept.model}`,
-      `Duration: ${currentConcept.duration} seconds`,
+      `Duration: ${currentConcept.duration ? `${currentConcept.duration} seconds` : 'Auto (decided by the model)'}`,
       `Aspect ratio: ${currentConcept.ratio}`,
-      `Camera: ${currentConcept.camera}`,
       `Reference: ${currentConcept.reference}`,
       '',
       `Created: ${currentConcept.createdAt ? new Date(currentConcept.createdAt).toLocaleString() : 'Not recorded'}`,
