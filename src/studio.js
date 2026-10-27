@@ -21,11 +21,6 @@ const IMAGE_INPUT_MODELS = ['Kling 2.5'];
 // returns a fixed-length clip (no duration param at all); Genjutsu's length
 // comes from the reference video you supply, not an output-duration field.
 const DURATION_LOCKED_MODELS = ['Veo 3.1', 'Genjutsu'];
-// Keep in sync with DURATION_MIN_SECONDS/DURATION_MAX_SECONDS in plans.ts —
-// this is just the UI-facing copy of the same bounds; the backend clamps
-// independently and is the real trust boundary.
-const DURATION_MIN_SECONDS = 3;
-const DURATION_MAX_SECONDS = 20;
 const PRESETS = {
   dunes: {
     label: 'Desert dream',
@@ -79,15 +74,14 @@ function writeStorage(key, value) {
   catch { return false; }
 }
 
-// '' means "Auto" — omit duration entirely and let the provider pick its
-// own default (see the `duration` field in requestGeneration's payload).
-// Anything else gets clamped into the shared bounds and rounded to a whole
-// second, same as the backend does independently in generate/route.ts.
+// Only three choices in the UI: fixed 5s, fixed 10s, or '' ("Auto" — omit
+// duration entirely and let the provider pick its own default, same as the
+// `duration` field in requestGeneration's payload being left undefined).
+// Anything else collapses to Auto rather than silently picking a nearby
+// value.
 function normalizeDuration(raw) {
-  if (raw === '' || raw === null || raw === undefined) return '';
-  const n = Number(raw);
-  if (!Number.isFinite(n)) return '';
-  return String(Math.min(DURATION_MAX_SECONDS, Math.max(DURATION_MIN_SECONDS, Math.round(n))));
+  const str = String(raw ?? '').trim();
+  return str === '5' || str === '10' ? str : '';
 }
 
 function validDraft(value = {}) {
@@ -251,7 +245,7 @@ export function initStudio() {
           </section>
           <div class="hw-studio-settings-grid">
             <fieldset class="hw-studio-fieldset"><legend class="hw-studio-label">Aspect ratio</legend><div class="hw-studio-segmented">${['16:9','9:16','1:1'].map(ratio => `<label class="hw-studio-segment"><input type="radio" name="ratio" value="${ratio}"><span><i class="hw-studio-ratio-icon hw-studio-ratio-icon--${ratio.replace(':', '-')}" aria-hidden="true"></i>${ratio}</span></label>`).join('')}</div></fieldset>
-            <fieldset class="hw-studio-fieldset" data-hw-duration-field><legend class="hw-studio-label">Length</legend><input class="hw-studio-text-input hw-studio-duration-input" type="number" id="hw-studio-duration" name="duration" min="${DURATION_MIN_SECONDS}" max="${DURATION_MAX_SECONDS}" step="1" inputmode="numeric" placeholder="Auto"><p class="hw-studio-field-hint">Seconds — leave blank to let the model decide.</p><p class="hw-studio-field-hint" data-hw-duration-locked-hint hidden></p></fieldset>
+            <fieldset class="hw-studio-fieldset" data-hw-duration-field><legend class="hw-studio-label">Length</legend><div class="hw-studio-segmented hw-studio-segmented--duration">${[['5','5s'],['10','10s'],['','Auto']].map(([value, label]) => `<label class="hw-studio-segment"><input type="radio" name="duration" value="${value}"><span>${label}</span></label>`).join('')}</div><p class="hw-studio-field-hint" data-hw-duration-locked-hint hidden></p></fieldset>
           </div>
           <div class="hw-studio-genjutsu-fields" data-hw-genjutsu-fields hidden>
             <label class="hw-studio-label" for="hw-studio-ref-video">Reference video URL</label>
@@ -276,7 +270,7 @@ export function initStudio() {
   const form = $('#hw-studio-form');
   const prompt = $('#hw-studio-prompt');
   const modelSelect = $('#hw-studio-model');
-  const durationInput = $('#hw-studio-duration');
+  const durationInputs = Array.from(studio.querySelectorAll('input[name="duration"]'));
   const durationLockedHint = $('[data-hw-duration-locked-hint]');
   const savedSelect = $('#hw-studio-saved');
   const generationsSelect = $('[data-hw-generations]');
@@ -380,9 +374,14 @@ export function initStudio() {
     genjutsuFields.hidden = !REFERENCE_INPUT_MODELS.includes(draft.model);
     imageInputFields.hidden = !IMAGE_INPUT_MODELS.includes(draft.model);
     const durationLocked = DURATION_LOCKED_MODELS.includes(draft.model);
-    durationInput.disabled = durationLocked;
+    durationInputs.forEach(input => { input.disabled = durationLocked; });
     durationLockedHint.hidden = !durationLocked;
     if (durationLocked) {
+      // Force the "Auto" radio visibly selected while locked — a stray 5s/10s
+      // pick from a previous model would otherwise just sit there disabled
+      // and misleading, even though a locked model always ignores it either
+      // way (see DURATION_LOCKED_MODELS above).
+      form.querySelector('input[name="duration"][value=""]').checked = true;
       durationLockedHint.textContent = draft.model === 'Veo 3.1'
         ? 'Veo 3.1 always generates a fixed-length clip.'
         : 'Genjutsu’s length comes from your reference video, not this setting.';
@@ -448,7 +447,7 @@ export function initStudio() {
     if (draft.prompt.trim()) prompt.removeAttribute('aria-invalid');
     modelSelect.value = draft.model;
     form.querySelector(`input[name="ratio"][value="${draft.ratio}"]`).checked = true;
-    durationInput.value = draft.duration;
+    form.querySelector(`input[name="duration"][value="${draft.duration}"]`).checked = true;
     refVideoInput.value = draft.refVideoUrl;
     refImagesInput.value = draft.refImageUrls;
     refImageInput.value = draft.refImageUrl;

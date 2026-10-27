@@ -206,7 +206,8 @@
 .hw-studio-text-input { width: 100%; border: 1px solid #3d4234; border-radius: 10px; background: #22251e; color: var(--hw-ivory); font-size: 12px; padding: 10px 12px; transition: border-color .2s; }
 .hw-studio-text-input::placeholder { color: #8c9082; opacity: 1; }
 .hw-studio-text-input:focus-visible { outline: none; border-color: #809158; }
-.hw-studio-duration-input:disabled { opacity: .45; cursor: not-allowed; }
+.hw-studio-segment:has(input:disabled) { opacity: .4; cursor: not-allowed; }
+.hw-studio-segment:has(input:disabled) input { cursor: not-allowed; }
 .hw-studio-account-actions { display: flex; gap: 8px; }
 .hw-studio-account-btn { flex: 1; padding: 9px 10px; border: 1px solid #3d4234; border-radius: 8px; background: #2b3023; color: var(--hw-lime); font-size: 10px; text-align: center; }
 .hw-studio-account-btn:hover { background: #343b28; }
