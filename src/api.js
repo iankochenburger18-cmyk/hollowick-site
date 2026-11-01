@@ -168,3 +168,39 @@ export async function startPortal() {
   if (!response.ok || !data?.url) throw new Error(data?.error || 'Could not open billing settings.');
   return data.url;
 }
+
+// À la carte model add-ons — unlocking one model on top of the signed-in
+// account's current plan tier, billed monthly on their existing Stripe
+// subscription (see src/lib/model-addons.ts on the backend). Used by the
+// pricing page's "Want one more model?" section (see pricing.js).
+export async function getModelAddons() {
+  const response = await apiFetch('/api/billing/addons');
+  const data = await readJSON(response);
+  if (response.status === 401) throw new Error('Sign in first.');
+  if (!response.ok) throw new Error(data?.error || 'Could not load add-on models.');
+  return data;
+}
+
+export async function addModelAddon(model) {
+  const response = await apiFetch('/api/billing/addons', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ model }),
+  });
+  const data = await readJSON(response);
+  if (response.status === 401) throw new Error('Sign in first.');
+  if (!response.ok) throw new Error(data?.error || `Could not add ${model}.`);
+  return data;
+}
+
+export async function removeModelAddon(model) {
+  const response = await apiFetch('/api/billing/addons', {
+    method: 'DELETE',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ model }),
+  });
+  const data = await readJSON(response);
+  if (response.status === 401) throw new Error('Sign in first.');
+  if (!response.ok) throw new Error(data?.error || `Could not remove ${model}.`);
+  return data;
+}
