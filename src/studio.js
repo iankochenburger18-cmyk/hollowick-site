@@ -927,6 +927,21 @@ export function initStudio() {
   refreshSession();
   persistDraft();
   if (draft.referenceType === 'upload') setStatus('Add your reference again; uploaded images aren’t stored.');
+
+  // Stripe Checkout/Billing Portal land back here with ?checkout=... (see
+  // success_url/cancel_url in the backend's src/app/api/billing/checkout
+  // and src/app/api/billing/portal routes). refreshSession() above already
+  // re-fetches the account's plan/credits, so this is just the
+  // acknowledgment — then strip the param so a reload doesn't repeat it.
+  const checkoutParam = new URLSearchParams(window.location.search).get('checkout');
+  if (checkoutParam === 'success') {
+    setStatus('You’re all set — your plan is active.');
+  } else if (checkoutParam === 'cancelled') {
+    setStatus('Checkout cancelled — your plan hasn’t changed.');
+  }
+  if (checkoutParam) {
+    window.history.replaceState(null, '', window.location.pathname + window.location.hash);
+  }
   videoElement.addEventListener('error', () => {
     videoElement.hidden = true;
     setStatus('Video unavailable. Your still reference and creative tools are ready.');

@@ -112,6 +112,45 @@
 .pricing-cta-status:empty { display: none; }
 .pricing-cta-status--error { color: #e4ab8e; }
 
+/* "Want one more model?" — à la carte add-ons for a signed-in account
+   already on a paid plan (src/pricing.js's initModelAddons(), backed by
+   GET/POST/DELETE /api/billing/addons). Hidden by default; shown only once
+   that fetch confirms there's something left for this account to add. */
+.pricing-addons-section {
+  padding: 10px var(--pad) 60px;
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+}
+.pricing-addons-heading h2 { font-size: clamp(22px, 3vw, 30px); line-height: 1.1; }
+.pricing-addons-heading p { margin-top: 8px; max-width: 540px; font-size: 13px; line-height: 1.7; color: var(--muted); }
+.pricing-addons-list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  max-width: 640px;
+}
+.pricing-addon-row {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 14px 18px;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  background: #1c1e18;
+}
+.pricing-addon-row--active { border-color: rgba(213, 237, 131, .4); }
+.pricing-addon-name { font-size: 13px; flex: 1; min-width: 0; }
+.pricing-addon-price { font-size: 12px; color: var(--muted); font-variant-numeric: tabular-nums; }
+.pricing-addon-btn { flex: none; padding: 8px 16px; font-size: 11px; }
+.pricing-addon-btn:disabled { opacity: .5; cursor: default; }
+.pricing-addons-status { font-size: 12px; color: var(--muted); }
+.pricing-addons-status:empty { display: none; }
+.pricing-addons-status--error { color: #e4ab8e; }
+
 .pricing-faq {
   padding: 90px var(--pad) 100px;
   display: flex;

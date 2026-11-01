@@ -1,6 +1,6 @@
 import { initStudioNavigation } from './studio.js';
 import { initFooter } from './footer.js';
-import { getBillingStatus, startCheckout, startPortal } from './api.js';
+import { getBillingStatus, startCheckout, startPortal, getModelAddons, addModelAddon, removeModelAddon } from './api.js';
 
 initFooter();
 initStudioNavigation();
@@ -73,16 +73,9 @@ async function runBillingAction(button, action) {
   }
 }
 
-async function initPricingCards() {
+async function initPricingCards(status) {
   const buttons = $$('[data-plan-cta]');
   if (buttons.length === 0) return;
-
-  let status;
-  try {
-    status = await getBillingStatus();
-  } catch {
-    status = { signedIn: false };
-  }
 
   for (const button of buttons) {
     const tier = PLAN_TIERS.find(value => value === button.dataset.planCta);
@@ -127,4 +120,90 @@ async function initPricingCards() {
   }
 }
 
-initPricingCards();
+// ---- "Want one more model?" — à la carte add-ons for a signed-in account
+// already on an active paid plan (src/lib/model-addons.ts on the backend).
+// Lists every model NOT already included in the account's plan tier, what
+// each one costs per month, and lets them add or remove one at a time —
+// these ride the account's existing Stripe subscription, no separate
+// Checkout flow needed.
+const addonsSection = $('#pricing-addons');
+const addonsList = $('#pricing-addons-list');
+const addonsStatus = $('#pricing-addons-status');
+
+function setAddonsStatus(message, error = false) {
+  if (!addonsStatus) return;
+  addonsStatus.textContent = message || '';
+  addonsStatus.classList.toggle('pricing-addons-status--error', error);
+}
+
+function renderAddonsList(addons) {
+  addonsList.replaceChildren();
+  for (const addon of addons) {
+    const row = document.createElement('li');
+    row.className = 'pricing-addon-row' + (addon.active ? ' pricing-addon-row--active' : '');
+
+    const name = document.createElement('span');
+    name.className = 'pricing-addon-name';
+    name.textContent = addon.model;
+
+    const price = document.createElement('span');
+    price.className = 'pricing-addon-price';
+    price.textContent = `$${(addon.priceCents / 100).toFixed(2)}/mo`;
+
+    const button = document.createElement('button');
+    button.type = 'button';
+    button.className = 'button button-dark pricing-addon-btn';
+    button.textContent = addon.active ? 'Remove' : 'Add';
+    button.addEventListener('click', () => toggleAddon(addon.model, addon.active, button));
+
+    row.append(name, price, button);
+    addonsList.append(row);
+  }
+}
+
+async function toggleAddon(model, isActive, button) {
+  button.disabled = true;
+  setAddonsStatus('');
+  try {
+    if (isActive) await removeModelAddon(model);
+    else await addModelAddon(model);
+    const data = await getModelAddons();
+    renderAddonsList(data.addons || []);
+    setAddonsStatus(isActive ? `${model} removed.` : `${model} added — it’s now available in the studio.`);
+  } catch (error) {
+    button.disabled = false;
+    setAddonsStatus(error.message || 'Something went wrong — try again in a moment.', true);
+  }
+}
+
+async function initModelAddons(status) {
+  if (!addonsSection || !addonsList) return;
+  // Same precondition addModelAddon() enforces server-side — it needs a
+  // live Stripe subscription to attach the add-on to, so there's nothing
+  // to offer a signed-out account, a free trial, or a lapsed plan.
+  if (!status.signedIn || !status.isPaidTier || !status.active) return;
+
+  let data;
+  try {
+    data = await getModelAddons();
+  } catch {
+    return; // fail silent — the plan cards above still work either way
+  }
+  if (!data?.addons || data.addons.length === 0) return; // e.g. already on STUDIO
+
+  renderAddonsList(data.addons);
+  addonsSection.hidden = false;
+}
+
+async function init() {
+  let status;
+  try {
+    status = await getBillingStatus();
+  } catch {
+    status = { signedIn: false };
+  }
+  await initPricingCards(status);
+  await initModelAddons(status);
+}
+
+init();

@@ -18,7 +18,13 @@ export function initVideoGallery() {
   let paused=false;
   let opener=null;
   let filter='all';
-  const visible=new WeakMap();
+  // Previously every card that was even 8% on-screen autoplayed, so
+  // scrolling through this wall could have 4-5 videos decoding at once
+  // (masonry layout = several columns visible together) — that's what was
+  // making the page feel laggy. Capping how many actually play at a time
+  // keeps the wall feeling alive without the concurrent-decode cost.
+  const MAX_CONCURRENT_VIDEOS=3;
+  const visible=new Set();
   const cards=[];
   const notify=()=>document.dispatchEvent(new CustomEvent('hollowick:dialog-change'));
 
@@ -72,15 +78,30 @@ export function initVideoGallery() {
     notify();
   });
 
-  function updatePlayback(card){
-    const video=card.querySelector('video');
-    if(paused||card.hidden||!visible.get(card)||document.hidden){video.pause();return;}
-    if(!video.hasAttribute('src'))video.src=video.dataset.src;
-    video.play().catch(()=>{});
+  // Recomputes the whole play/pause state in one pass rather than per-card,
+  // so a slot freed by a card scrolling out of view gets picked up by the
+  // next eligible card immediately (an incremental per-card update can't do
+  // that — it never revisits a card that was merely waiting for a slot).
+  function syncPlayback(){
+    const eligible=paused||document.hidden?[]:cards.filter(card=>!card.hidden&&visible.has(card));
+    const toPlay=new Set(eligible.slice(0,MAX_CONCURRENT_VIDEOS));
+    for(const card of cards){
+      const video=card.querySelector('video');
+      if(toPlay.has(card)){
+        if(!video.hasAttribute('src'))video.src=video.dataset.src;
+        video.play().catch(()=>{});
+      } else if(!video.paused){
+        video.pause();
+      }
+    }
   }
+  // threshold raised from .08 to .3 — a card now has to be meaningfully in
+  // view (not just a sliver) before it's even a candidate to autoplay,
+  // which on its own cuts down how many qualify at once during a scroll.
   const playbackObserver=new IntersectionObserver(entries=>{
-    entries.forEach(entry=>{visible.set(entry.target,entry.isIntersecting);updatePlayback(entry.target);});
-  },{threshold:.08});
+    entries.forEach(entry=>{if(entry.isIntersecting)visible.add(entry.target);else visible.delete(entry.target);});
+    syncPlayback();
+  },{threshold:.3});
   cards.forEach(card=>playbackObserver.observe(card));
 
   function syncColumns(){
@@ -94,10 +115,11 @@ export function initVideoGallery() {
     document.querySelectorAll('[data-video-filter]').forEach(item=>{
       item.classList.toggle('active',item===button);item.setAttribute('aria-pressed',String(item===button));
     });
-    cards.forEach(card=>{card.hidden=filter!=='all'&&card.dataset.category!==filter;updatePlayback(card);});
+    cards.forEach(card=>{card.hidden=filter!=='all'&&card.dataset.category!==filter;});
+    syncPlayback();
     syncColumns();
   }));
   window.addEventListener('resize',syncColumns,{passive:true});
   syncColumns();
-  return {sync(options={}){paused=Boolean(options.paused);cards.forEach(updatePlayback);}};
+  return {sync(options={}){paused=Boolean(options.paused);syncPlayback();}};
 }
