@@ -154,14 +154,32 @@ function renderAddonsList(addons) {
     button.type = 'button';
     button.className = 'button button-dark pricing-addon-btn';
     button.textContent = addon.active ? 'Remove' : 'Add';
-    button.addEventListener('click', () => toggleAddon(addon.model, addon.active, button));
+    button.addEventListener('click', () => toggleAddon(addon.model, addon.active, addon.priceCents, button));
 
     row.append(name, price, button);
     addonsList.append(row);
   }
 }
 
-async function toggleAddon(model, isActive, button) {
+async function toggleAddon(model, isActive, priceCents, button) {
+  // Adding rides straight onto the account's existing Stripe subscription,
+  // with no separate Checkout page to confirm on — see startPortal/
+  // startCheckout above for the models that DO get a hosted page. It does
+  // NOT bill right away, though: Stripe's default for adding a subscription
+  // item is to hold the prorated amount as a pending charge and roll it
+  // into the account's next regular invoice (confirmed live against a real
+  // test subscription — the dashboard's own "upcoming invoice" view showed
+  // exactly that), not charge anything today. This is the only guard
+  // against a stray click here, so it only gates the add direction;
+  // removing just stops a future charge rather than starting one, and
+  // nets out via its own credit proration either way (see
+  // removeModelAddon on the backend), so it doesn't need the same
+  // confirmation.
+  if (!isActive) {
+    const confirmed = window.confirm(`Add ${model} for $${(priceCents / 100).toFixed(2)}/mo? This will show up prorated on your next regular invoice — it won't charge your card today.`);
+    if (!confirmed) return;
+  }
+
   button.disabled = true;
   setAddonsStatus('');
   try {
