@@ -63,6 +63,9 @@
 .hw-studio-live-dot { flex: 0 0 4px; width: 4px; height: 4px; border-radius: 50%; background: var(--hw-lime); }
 .hw-studio-reference-tools { display: flex; justify-content: center; align-items: center; gap: 12px; padding: 14px 0 0; color: #96988c; font-size: 10px; }
 .hw-studio-reference-tools > span:first-child { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; min-width: 0; }
+.hw-studio-video-download { display: grid; place-items: center; flex: none; width: 26px; height: 26px; border-radius: 50%; background: #f2f1e908; color: #c1c6b6; text-decoration: none; transition: background .2s, color .2s; }
+.hw-studio-video-download:hover { color: var(--hw-lime); background: #d5ed8312; }
+.hw-studio-video-download svg { width: 14px; height: 14px; }
 .hw-studio-upload { display: grid; place-items: center; width: 42px; height: 42px; flex: none; border: 0; border-radius: 50%; background: #f2f1e908; color: #c1c6b6; cursor: pointer; transition: background .2s, color .2s; }
 .hw-studio-upload:hover { color: var(--hw-lime); background: #d5ed8312; }
 .hw-studio-upload svg { width: 21px; height: 21px; }

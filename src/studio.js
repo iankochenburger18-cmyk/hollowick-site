@@ -203,7 +203,7 @@ export function initStudio() {
                 <div class="hw-studio-reference-missing" data-hw-reference-missing hidden><span data-hw-missing-title>Reference unavailable.</span><p data-hw-missing-description>Add your image again with the plus button.</p></div>
               </div>
             </div>
-            <figcaption class="hw-studio-reference-tools"><span data-hw-reference-kind>Sample film</span><span data-hw-image-ratio>16:9</span></figcaption>
+            <figcaption class="hw-studio-reference-tools"><span data-hw-reference-kind>Sample film</span><span data-hw-image-ratio>16:9</span><a class="hw-studio-video-download" data-hw-video-download href="#" download hidden aria-label="Download your video" title="Download video">${icon.download}</a></figcaption>
           </figure>
         </div>
         <div class="hw-studio-composer-dock">
@@ -280,6 +280,7 @@ export function initStudio() {
   const submitBtn = $('[data-hw-submit]');
   const imageElement = $('[data-hw-image]');
   const videoElement = $('[data-hw-video]');
+  const videoDownloadLink = $('[data-hw-video-download]');
   const reducedMotion = matchMedia('(prefers-reduced-motion: reduce)');
   const mobileLayout = matchMedia('(max-width: 800px)');
   const sidebar = $('#hw-studio-sidebar');
@@ -417,11 +418,18 @@ export function initStudio() {
         videoElement.load();
       }
       $('[data-hw-reference-kind]').textContent = `${currentConcept?.model || draft.model} · your generation`;
+      // ?download makes the backend send Content-Disposition: attachment
+      // (see src/app/api/videos/[jobId]/route.ts) — this anchor's own
+      // `download` attribute alone wouldn't force a save dialog here, since
+      // this is a cross-origin link (api.hollowick.app from hollowick.app).
+      videoDownloadLink.href = `${liveVideoUrl}?download`;
+      videoDownloadLink.hidden = false;
     } else {
       videoElement.controls = false;
       videoElement.muted = true;
       videoElement.loop = true;
       videoElement.hidden = !isFilm || !hasResult;
+      videoDownloadLink.hidden = true;
       $('[data-hw-reference-kind]').textContent = isFilm ? `${preset.label} · sample film` : 'Your reference image';
       if (isFilm && hasResult) {
         if (videoElement.getAttribute('src') !== preset.video) {
